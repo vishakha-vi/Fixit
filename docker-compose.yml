@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fixit
+      POSTGRES_USER: fixit
+      POSTGRES_PASSWORD: fixit_secret_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fixit -d fixit"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  web:
+    build: .
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+    environment:
+      DEBUG: "False"
+      SECRET_KEY: "docker-compose-production-demonstration-secret-key-replace-me"
+      ALLOWED_HOSTS: "localhost,127.0.0.1,web"
+      DATABASE_URL: "postgres://fixit:fixit_secret_password@db:5432/fixit"
+      CSRF_TRUSTED_ORIGINS: "http://localhost:8000,http://127.0.0.1:8000"
+      DEMO_MODE: "True"
+      DEMO_PASSWORD: "DemoFixItPass123!"
+      APP_VERSION: "0.1.0-docker"
+      SECURE_SSL_REDIRECT: "False"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
