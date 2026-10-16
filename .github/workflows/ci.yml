@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: fixit_ci
+          POSTGRES_USER: fixit_user
+          POSTGRES_PASSWORD: fixit_secure_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://fixit_user:fixit_secure_ci_password@localhost:5432/fixit_ci
+      SECRET_KEY: ci-secret-key-for-testing-only-at-least-fifty-characters-long
+      DEBUG: "True"
+      DEMO_MODE: "True"
+      APP_VERSION: ${{ github.sha }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Code Quality & Lint (ruff)
+        run: |
+          ruff check .
+
+      - name: Django System Checks
+        run: |
+          python manage.py check
+
+      - name: Verify Migrations are Up to Date
+        run: |
+          python manage.py makemigrations --check --dry-run
+
+      - name: Run Database Migrations
+        run: |
+          python manage.py migrate
+
+      - name: Run Automated Test Suite
+        run: |
+          pytest -q
+
+      - name: Start Server in Background & Run Smoke Test
+        run: |
+          python manage.py runserver 127.0.0.1:8000 &
+          sleep 3
+          python scripts/smoke_test.py --base-url http://127.0.0.1:8000
