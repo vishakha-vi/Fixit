@@ -3,10 +3,12 @@ services:
     name: fixit-web
     runtime: python
     plan: free
-    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate"
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate && python manage.py setup_site"
     startCommand: "gunicorn config.wsgi --bind 0.0.0.0:$PORT"
     healthCheckPath: /healthz
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
       - key: DEBUG
         value: "False"
       - key: SECRET_KEY
@@ -19,12 +21,20 @@ services:
         value: ".onrender.com,localhost"
       - key: CSRF_TRUSTED_ORIGINS
         value: "https://*.onrender.com"
+      # Main admin account, created on every deploy if missing (Render asks for these values)
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ALLOW_STUDENT_SIGNUP
+        value: "True"
+      # True loads a demo campus with sample complaints on the first deploy
       - key: DEMO_MODE
         value: "True"
       - key: DEMO_PASSWORD
         value: "DemoFixItPass123!"
       - key: APP_VERSION
-        value: "0.1.0-render"
+        value: "1.0.0-render"
 
 databases:
   - name: fixit-db

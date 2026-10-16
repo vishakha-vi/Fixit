@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load fixit %}
+
+{% block title %}Worker Locator - FixIt{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <div>
+        <h1 class="h3 page-title mb-1">Worker locator</h1>
+        <p class="text-muted small mb-0">Where every worker is right now, grouped by building. A worker on a job is shown at that job's location.</p>
+    </div>
+    <form method="get" class="d-flex flex-wrap gap-2" aria-label="Filter workers">
+        <select class="form-select form-select-sm w-auto" name="building" aria-label="Building" onchange="this.form.submit()">
+            <option value="">All buildings</option>
+            {% for b in buildings %}<option value="{{ b.pk }}" {% if filters.building == b.pk|stringformat:"s" %}selected{% endif %}>{{ b.name }}</option>{% endfor %}
+        </select>
+        <select class="form-select form-select-sm w-auto" name="specialty" aria-label="Skill" onchange="this.form.submit()">
+            <option value="">All skills</option>
+            {% for value, label in specialties %}<option value="{{ value }}" {% if filters.specialty == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+        <select class="form-select form-select-sm w-auto" name="status" aria-label="Status" onchange="this.form.submit()">
+            <option value="">Any status</option>
+            <option value="available" {% if filters.status == "available" %}selected{% endif %}>Available</option>
+            <option value="busy" {% if filters.status == "busy" %}selected{% endif %}>Busy on a job</option>
+            <option value="off_duty" {% if filters.status == "off_duty" %}selected{% endif %}>Off duty</option>
+            <option value="on_leave" {% if filters.status == "on_leave" %}selected{% endif %}>On leave</option>
+        </select>
+        <noscript><button class="btn btn-sm btn-primary" type="submit">Apply</button></noscript>
+    </form>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Workers shown</div><div class="value">{{ total }}</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label"><span class="badge text-bg-success me-1">●</span>Available</div><div class="value">{{ counts.available }}</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label"><span class="badge text-bg-warning me-1">●</span>Busy on a job</div><div class="value">{{ counts.busy }}</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label"><span class="badge text-bg-secondary me-1">●</span>Off duty / leave</div><div class="value">{{ counts.off_duty|add:counts.on_leave }}</div></div></div>
+</div>
+
+<div class="row g-4">
+    <div class="{% if location_form %}col-lg-8{% else %}col-12{% endif %}">
+        {% for building_name, rows in groups %}
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between">
+                <span>📍 {{ building_name }}</span>
+                <span class="small text-muted fw-normal">{{ rows|length }} worker{{ rows|length|pluralize }}</span>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {% for row in rows %}
+                    <div class="col-md-6">
+                        <div class="border rounded-3 p-3 h-100 worker-card st-{{ row.state }}">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <div>
+                                    <div class="fw-semibold">{% if nav.admin %}<a href="{% url 'portal:user_detail' row.worker.pk %}">{{ row.worker.display_name }}</a>{% else %}{{ row.worker.display_name }}{% endif %}</div>
+                                    <div class="small text-muted">{{ row.worker.get_specialty_display }}{% if row.worker.area %} &middot; covers {{ row.worker.area.name }}{% endif %}</div>
+                                </div>
+                                {% if row.state == "available" %}<span class="badge text-bg-success">Available</span>
+                                {% elif row.state == "busy" %}<span class="badge text-bg-warning text-dark">Busy</span>
+                                {% elif row.state == "on_leave" %}<span class="badge text-bg-secondary">On leave</span>
+                                {% else %}<span class="badge text-bg-secondary">Off duty</span>{% endif %}
+                            </div>
+                            <div class="small mt-2">
+                                <strong>At:</strong> {% if row.location %}{{ row.location.full_name }}{% elif row.building %}{{ row.building.name }} (home area){% else %}<span class="text-muted">not shared</span>{% endif %}
+                                {% if row.worker.location_updated_at %}<span class="text-muted">&middot; updated {{ row.worker.location_updated_at|timeago }}</span>{% endif %}
+                            </div>
+                            {% if row.current_job %}
+                            <div class="small mt-1"><strong>Working on:</strong> <a href="{{ row.current_job.get_absolute_url }}">{{ row.current_job.code }}</a> {{ row.current_job.title }}</div>
+                            {% endif %}
+                            <div class="small text-muted mt-1">{{ row.jobs|length }} open job{{ row.jobs|length|pluralize }}</div>
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                {% if row.worker.phone %}<a class="btn btn-sm btn-outline-primary" href="tel:{{ row.worker.phone }}">Call {{ row.worker.phone }}</a>{% endif %}
+                                {% if row.maps_url %}<a class="btn btn-sm btn-outline-secondary" href="{{ row.maps_url }}" target="_blank" rel="noopener">GPS on map ↗</a>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="card"><div class="empty-state">No workers match these filters.</div></div>
+        {% endfor %}
+    </div>
+    {% if location_form %}
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">Update my location</div>
+            <div class="card-body">{% include "partials/location_form.html" with form=location_form %}</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

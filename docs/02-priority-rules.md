@@ -1,6 +1,6 @@
 # 02. Priority Rules and SLA Specification
 
-The FixIt ticket scoring and SLA bands are formally defined in [`docs/priority_rules.yaml`](file:///c:/Users/MAHENDRA/Desktop/hackvision%20website/docs/priority_rules.yaml).
+The FixIt ticket scoring and SLA bands are formally defined in [`docs/priority_rules.yaml`](priority_rules.yaml).
 
 ## Scoring Formula
 

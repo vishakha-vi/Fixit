@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% load fixit %}
+
+{% block title %}Dashboard - FixIt{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <div>
+        <h1 class="h3 page-title mb-1">Complaints dashboard</h1>
+        <p class="text-muted small mb-0">How many complaints come in across campus, and how fast they get fixed. {{ period_label }}{% if building %} &middot; one building{% else %} &middot; all buildings{% endif %}.</p>
+    </div>
+    <form method="get" class="d-flex flex-wrap gap-2" aria-label="Dashboard filters">
+        <select class="form-select form-select-sm w-auto" name="period" aria-label="Period" onchange="this.form.submit()">
+            {% for value, label in periods %}<option value="{{ value }}" {% if value == period %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+        <select class="form-select form-select-sm w-auto" name="building" aria-label="Building" onchange="this.form.submit()">
+            <option value="">All buildings</option>
+            {% for b in buildings %}<option value="{{ b.pk }}" {% if building == b.pk|stringformat:"s" %}selected{% endif %}>{{ b.name }}</option>{% endfor %}
+        </select>
+        <noscript><button class="btn btn-sm btn-primary" type="submit">Apply</button></noscript>
+    </form>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-lg-4">
+        <div class="stat-tile hero">
+            <div class="label">Complaints raised</div>
+            <div class="value">{{ s.total }}</div>
+            <div class="hint">{{ period_label }} &middot; {{ s.today }} today</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-tile"><div class="label">Open now</div><div class="value">{{ s.open }}</div><div class="hint">{{ s.unassigned }} without a worker</div></div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-tile"><div class="label">Overdue</div><div class="value {% if s.overdue %}text-danger{% endif %}">{{ s.overdue }}</div><div class="hint">past their SLA</div></div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-tile"><div class="label">Confirmed fixed</div><div class="value">{{ s.resolved }}</div><div class="hint">{% if s.verification_rate is not None %}{{ s.verification_rate }}% of closed were confirmed{% else %}none closed yet{% endif %}</div></div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="stat-tile"><div class="label">Avg time to fix</div><div class="value">{% if s.avg_resolution_hours is not None %}{{ s.avg_resolution_hours }} h{% else %}-{% endif %}</div><div class="hint">{{ s.awaiting }} awaiting confirmation</div></div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>Complaints per day (last {{ s.trend_days }} days)</span>
+        <div class="legend" aria-hidden="true">
+            <span><span class="key" style="background: var(--viz-series-1)"></span>Raised</span>
+            <span><span class="key" style="background: var(--viz-series-2)"></span>Confirmed fixed</span>
+        </div>
+    </div>
+    <div class="card-body">
+        {% with c=s.trend %}
+        <div class="viz-scroll">
+        <div class="viz" id="trend-chart">
+            <svg viewBox="0 0 {{ c.width }} {{ c.height }}" role="img" aria-label="Line chart of complaints raised and confirmed fixed per day. Use the table below for exact values.">
+                {% for t in c.ticks %}
+                    <line class="{% if forloop.first %}baseline{% else %}grid{% endif %}" x1="{{ c.left }}" x2="{{ c.right_x }}" y1="{{ t.y }}" y2="{{ t.y }}"></line>
+                    <text class="tick" x="{{ c.left|add:'-6' }}" y="{{ t.y }}" dy="4" text-anchor="end">{{ t.value }}</text>
+                {% endfor %}
+                {% for l in c.x_labels %}
+                    <text class="tick" x="{{ l.x }}" y="{{ c.baseline }}" dy="17" text-anchor="middle">{{ l.text }}</text>
+                {% endfor %}
+                {% for ser in c.series %}
+                    {% if ser.slot == 1 %}<path class="a1" d="{{ ser.area }}"></path>{% endif %}
+                {% endfor %}
+                {% for ser in c.series %}
+                    <polyline class="line s{{ ser.slot }}" points="{{ ser.points }}"></polyline>
+                {% endfor %}
+                {% for ser in c.series %}{% if ser.last %}
+                    <circle class="dot{{ ser.slot }}" cx="{{ ser.last.x }}" cy="{{ ser.last.y }}" r="4"></circle>
+                    {% if ser.last.show_label %}<text class="end-label" x="{{ ser.last.x }}" y="{{ ser.last.label_y }}" dx="-8" text-anchor="end">{{ ser.name }} {{ ser.last.value }}</text>{% endif %}
+                {% endif %}{% endfor %}
+                <line class="crosshair js-cross" x1="0" x2="0" y1="12" y2="{{ c.baseline }}"></line>
+                <circle class="dot1 js-hover1" r="4" cx="0" cy="0" style="visibility: hidden"></circle>
+                <circle class="dot2 js-hover2" r="4" cx="0" cy="0" style="visibility: hidden"></circle>
+                <rect class="js-hit" x="{{ c.left }}" y="0" width="{{ c.right_x|add:'-34' }}" height="{{ c.baseline }}" fill="transparent"></rect>
+            </svg>
+            <div class="viz-tooltip" role="status"></div>
+        </div>
+        </div>
+        {{ c.columns|json_script:"trend-data" }}
+        <details class="mt-2 small">
+            <summary class="text-muted">Show as table</summary>
+            <div class="table-responsive mt-2" style="max-height: 260px">
+                <table class="table table-sm text-tabular mb-0">
+                    <thead><tr><th>Day</th><th class="text-end">Raised</th><th class="text-end">Confirmed fixed</th></tr></thead>
+                    <tbody>{% for col in c.columns %}<tr><td>{{ col.label }}</td><td class="text-end">{{ col.values.0 }}</td><td class="text-end">{{ col.values.1 }}</td></tr>{% endfor %}</tbody>
+                </table>
+            </div>
+        </details>
+        {% endwith %}
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    {% include "core/_bars.html" with title="By status" rows=s.by_status %}
+    {% include "core/_bars.html" with title="By category" rows=s.by_category %}
+    {% include "core/_bars.html" with title="By building / area" rows=s.by_building %}
+    {% include "core/_bars.html" with title="By priority" rows=s.by_band %}
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">Workers</div>
+            {% if s.workers %}
+            <div class="table-responsive">
+                <table class="table table-sm mb-0 align-middle">
+                    <thead class="table-light small text-muted">
+                        <tr><th>Worker</th><th>Area</th><th class="text-end">Open jobs</th><th class="text-end">Fixed</th><th class="text-end">Avg hours</th><th class="text-end">Pending pay</th></tr>
+                    </thead>
+                    <tbody class="text-tabular">
+                    {% for row in s.workers %}
+                        <tr>
+                            <td class="small">{{ row.worker.display_name }}<div class="text-muted">{{ row.worker.get_specialty_display }}</div></td>
+                            <td class="small">{{ row.worker.area.name|default:"-" }}</td>
+                            <td class="text-end">{{ row.open_jobs }}</td>
+                            <td class="text-end">{{ row.completed }}</td>
+                            <td class="text-end">{{ row.avg_hours|default:"-" }}</td>
+                            <td class="text-end">{{ row.pending_pay|inr }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}<div class="empty-state">No workers yet.</div>{% endif %}
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between"><span>Most overdue</span>{% if s.overdue %}<a class="small" href="{% url 'tickets:list' %}?scope=overdue">All {{ s.overdue }}</a>{% endif %}</div>
+            {% if s.overdue_list %}
+            <ul class="list-group list-group-flush small">
+                {% for t in s.overdue_list %}
+                <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                    <div><a href="{{ t.get_absolute_url }}">{{ t.code }}</a> {{ t.title }}<div class="text-muted">{{ t.location.full_name }}</div></div>
+                    {% sla_badge t %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}<div class="empty-state">Nothing is overdue. 🎉</div>{% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between"><span>Latest complaints</span><a class="small" href="{% url 'tickets:list' %}?group=all">See all</a></div>
+    {% include "partials/ticket_table.html" with tickets=recent empty="No complaints yet." %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    var root = document.getElementById("trend-chart");
+    if (!root) return;
+    // On narrow screens the chart scrolls; start at the most recent days
+    var scroller = root.parentElement;
+    scroller.scrollLeft = scroller.scrollWidth;
+    var svg = root.querySelector("svg");
+    var cols = JSON.parse(document.getElementById("trend-data").textContent);
+    var tip = root.querySelector(".viz-tooltip");
+    var cross = svg.querySelector(".js-cross");
+    var h1 = svg.querySelector(".js-hover1"), h2 = svg.querySelector(".js-hover2");
+    var hit = svg.querySelector(".js-hit");
+    var lines = svg.querySelectorAll("polyline");
+    function pointsOf(el) {
+        return el.getAttribute("points").split(" ").map(function (p) { var xy = p.split(","); return [+xy[0], +xy[1]]; });
+    }
+    var p1 = pointsOf(lines[0]), p2 = pointsOf(lines[1]);
+    function show(evt) {
+        var e = evt.touches ? evt.touches[0] : evt;
+        var pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+        var loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+        var best = 0, dist = Infinity;
+        cols.forEach(function (c, i) { var d = Math.abs(c.x - loc.x); if (d < dist) { dist = d; best = i; } });
+        var col = cols[best];
+        cross.setAttribute("x1", col.x); cross.setAttribute("x2", col.x); cross.style.visibility = "visible";
+        h1.style.visibility = "visible"; h2.style.visibility = "visible";
+        h1.setAttribute("cx", p1[best][0]); h1.setAttribute("cy", p1[best][1]);
+        h2.setAttribute("cx", p2[best][0]); h2.setAttribute("cy", p2[best][1]);
+        tip.innerHTML = "<strong>" + col.label + "</strong><br>" +
+            '<span class="key" style="display:inline-block;width:10px;height:3px;background:var(--viz-series-1);vertical-align:middle;margin-right:5px"></span>Raised: ' + col.values[0] + "<br>" +
+            '<span class="key" style="display:inline-block;width:10px;height:3px;background:var(--viz-series-2);vertical-align:middle;margin-right:5px"></span>Confirmed fixed: ' + col.values[1];
+        tip.style.display = "block";
+        var box = root.getBoundingClientRect();
+        var scale = box.width / svg.viewBox.baseVal.width;
+        var left = col.x * scale + 12;
+        if (left + tip.offsetWidth > box.width) left = col.x * scale - tip.offsetWidth - 12;
+        tip.style.left = left + "px"; tip.style.top = "8px";
+    }
+    function hide() {
+        tip.style.display = "none"; cross.style.visibility = "hidden";
+        h1.style.visibility = "hidden"; h2.style.visibility = "hidden";
+    }
+    hit.addEventListener("mousemove", show);
+    hit.addEventListener("touchstart", show, { passive: true });
+    hit.addEventListener("touchmove", show, { passive: true });
+    hit.addEventListener("mouseleave", hide);
+})();
+</script>
+{% endblock %}

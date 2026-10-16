@@ -1,0 +1,65 @@
+{% extends "portal/base_portal.html" %}
+
+{% block portal_head_title %}Buildings &amp; rooms{% endblock %}
+{% block portal_title %}Buildings &amp; rooms{% endblock %}
+
+{% block portal_content %}
+<div class="row g-4">
+    <div class="col-lg-8">
+        {% for b in buildings %}
+        <div class="card mb-3">
+            <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span>{{ b.name }} <code class="small">{{ b.code }}</code>{% if b.is_critical %} <span class="badge text-bg-danger">Critical</span>{% endif %}</span>
+                <span class="small text-muted fw-normal">{{ b.open_count }} open complaint{{ b.open_count|pluralize }} &middot; {{ b.worker_count }} worker{{ b.worker_count|pluralize }}
+                    <form method="post" action="{% url 'portal:area_delete' 'building' b.pk %}" class="d-inline ms-2">
+                        {% csrf_token %}<button class="btn btn-sm btn-link text-danger p-0" type="submit" aria-label="Delete {{ b.name }}">Delete</button>
+                    </form>
+                </span>
+            </div>
+            {% if b.locations.all %}
+            <ul class="list-group list-group-flush small">
+                {% for l in b.locations.all %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>{{ l.name }} <span class="text-muted">&middot; floor {{ l.floor }}</span>{% if l.is_critical %} <span class="badge text-bg-danger">Critical</span>{% endif %}{% if l.is_common_area %} <span class="badge text-bg-light border">Common area</span>{% endif %}</span>
+                    <form method="post" action="{% url 'portal:area_delete' 'location' l.pk %}">
+                        {% csrf_token %}<button class="btn btn-sm btn-link text-danger p-0" type="submit" aria-label="Delete {{ l.name }}">Delete</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="card-body small text-muted">No rooms yet. Add one on the right.</div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="card"><div class="empty-state">No buildings yet. Add your first building on the right.</div></div>
+        {% endfor %}
+    </div>
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">Add building</div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" name="form" value="building">
+                    {% include "partials/form_errors.html" with form=building_form %}
+                    {% for field in building_form %}{% include "partials/field.html" %}{% endfor %}
+                    <button class="btn btn-primary btn-sm" type="submit">Add building</button>
+                </form>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">Add room / area</div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" name="form" value="location">
+                    {% include "partials/form_errors.html" with form=location_form %}
+                    {% for field in location_form %}{% include "partials/field.html" %}{% endfor %}
+                    <button class="btn btn-primary btn-sm" type="submit">Add room</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

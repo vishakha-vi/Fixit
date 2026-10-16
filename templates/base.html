@@ -7,94 +7,107 @@
     <title>{% block title %}FixIt - Campus Maintenance{% endblock %}</title>
     <!-- Vendored Bootstrap CSS (Local, No CDN) -->
     <link rel="stylesheet" href="{% static 'vendor/bootstrap.min.css' %}">
-    <style>
-        :root {
-            --fixit-blue: #0d6efd;
-            --fixit-amber: #f59e0b;
-            --fixit-green: #10b981;
-            --fixit-dark: #0f172a;
-        }
-        body {
-            background-color: #f8fafc;
-            color: #1e293b;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-        .navbar-brand {
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-        .footer {
-            margin-top: auto;
-            border-top: 1px solid #e2e8f0;
-            background: #ffffff;
-        }
-        .badge-verified {
-            background-color: var(--fixit-green);
-            color: #fff;
-        }
-        .badge-reported {
-            background-color: var(--fixit-amber);
-            color: #1e293b;
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/fixit.css' %}">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
-            <div class="container">
+            <div class="container-xl">
                 <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
-                    <span class="fs-4">🔧</span>
+                    <span class="fs-4" aria-hidden="true">🔧</span>
                     <span>FixIt</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#fixitNav" aria-controls="fixitNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="fixitNav">
+                    {% if user.is_authenticated %}
+                    {% with path=request.path %}
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        {% if nav.dashboard %}
+                            <li class="nav-item"><a class="nav-link {% if path == '/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}">Dashboard</a></li>
+                        {% endif %}
+                        {% if nav.complaints %}
+                            <li class="nav-item"><a class="nav-link {% if '/complaints/' in path and 'new' not in path %}active{% endif %}" href="{% url 'tickets:list' %}">{% if nav.jobs_only %}My jobs{% else %}Complaints{% endif %}</a></li>
+                        {% endif %}
+                        {% if nav.submit %}
+                            <li class="nav-item"><a class="nav-link {% if path == '/complaints/new/' %}active{% endif %}" href="{% url 'tickets:create' %}">New complaint</a></li>
+                        {% endif %}
+                        {% if nav.track %}
+                            <li class="nav-item"><a class="nav-link {% if path == '/track/' %}active{% endif %}" href="{% url 'tickets:track' %}">Track</a></li>
+                        {% endif %}
+                        {% if nav.reminders %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if '/reminders/' in path %}active{% endif %}" href="{% url 'tickets:reminders' %}">
+                                    Reminders{% if due_reminders %} <span class="badge rounded-pill text-bg-danger" aria-label="{{ due_reminders }} due">{{ due_reminders }}</span>{% endif %}
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if nav.payments %}
+                            <li class="nav-item"><a class="nav-link {% if '/payments/' in path %}active{% endif %}" href="{% url 'payments:list' %}">{% if nav.all_payments %}Worker payments{% else %}My earnings{% endif %}</a></li>
+                        {% endif %}
+                        {% if nav.locator %}
+                            <li class="nav-item"><a class="nav-link {% if path == '/workers/' %}active{% endif %}" href="{% url 'worker_locator' %}">Worker locator</a></li>
+                        {% endif %}
+                        {% if nav.admin %}
+                            <li class="nav-item"><a class="nav-link text-warning {% if '/portal/' in path %}active{% endif %}" href="{% url 'portal:home' %}">Admin portal</a></li>
+                        {% endif %}
+                    </ul>
+                    {% endwith %}
+                    <ul class="navbar-nav ms-auto align-items-lg-center gap-2">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-light" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <strong>{{ user.first_name|default:user.username }}</strong>
+                                <span class="badge bg-secondary ms-1">{{ user.get_role_display }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                                <li><h6 class="dropdown-header">Signed in as {{ user.email|default:user.username }}</h6></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">My profile &amp; password</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="post" action="{% url 'logout' %}" class="px-3 py-1">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">Sign out</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    {% else %}
                     <ul class="navbar-nav ms-auto align-items-center gap-2">
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'healthz' %}">Health API</a>
                         </li>
-                        {% if user.is_authenticated %}
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-light" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <strong>{{ user.username }}</strong>
-                                    <span class="badge bg-secondary ms-1">{{ user.get_role_display }}</span>
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
-                                    <li><h6 class="dropdown-header">Signed in as {{ user.username }}</h6></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <form method="post" action="{% url 'logout' %}" class="px-3 py-1">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100">Sign out</button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </li>
-                        {% else %}
-                            <li class="nav-item">
-                                <a class="btn btn-primary btn-sm px-3" href="{% url 'login' %}">Sign in</a>
-                            </li>
+                        {% if allow_signup %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:signup' %}">Student sign up</a>
+                        </li>
                         {% endif %}
+                        <li class="nav-item">
+                            <a class="btn btn-primary btn-sm px-3" href="{% url 'login' %}">Sign in</a>
+                        </li>
                     </ul>
+                    {% endif %}
                 </div>
             </div>
         </nav>
+        {% if demo_mode and demo_now %}
+        <div class="demo-bar text-center small py-1">
+            Demo mode &middot; FixIt clock: <strong>{{ demo_now|date:"D d M Y, H:i" }}</strong>
+        </div>
+        {% endif %}
     </header>
 
-    <main class="container my-4 flex-grow-1">
+    <main class="container-xl py-4 flex-grow-1">
         {% if messages %}
-            <div class="mb-4">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
+            <div class="mb-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
             </div>
         {% endif %}
 
@@ -102,7 +115,7 @@
     </main>
 
     <footer class="footer py-3 text-center text-muted small">
-        <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="container-xl d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span>FixIt Maintenance Platform &copy; 2026. Residential University Campus.</span>
             <span>Version: <code>{{ version|default:"0.1.0" }}</code></span>
         </div>

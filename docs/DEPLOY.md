@@ -13,21 +13,22 @@ This guide provides step-by-step instructions for deploying FixIt to [Render](ht
 
 ## 2. Deploy via Render Blueprint (Recommended)
 
-FixIt contains a preconfigured [`render.yaml`](file:///c:/Users/MAHENDRA/Desktop/hackvision%20website/render.yaml) blueprint that automatically provisions the web service and PostgreSQL database.
+FixIt contains a preconfigured [`render.yaml`](../render.yaml) blueprint that automatically provisions the web service and PostgreSQL database.
 
 ### Step-by-Step Instructions:
 1. Log in to your Render Dashboard at [dashboard.render.com](https://dashboard.render.com).
 2. Click **New +** in the top right corner and select **Blueprint**.
-3. Connect your GitHub account and select the `hackvision-website` / `fixit` repository.
-4. Render will detect `render.yaml`. Click **Apply**.
+3. Connect your GitHub account and select the `FIXIT` repository.
+4. Render will detect `render.yaml` and ask for `ADMIN_EMAIL` and `ADMIN_PASSWORD`. Enter the email and a strong password for your admin account, then click **Apply**.
 5. Render will automatically:
    - Create a managed PostgreSQL database (`fixit-db`).
    - Create a Web Service (`fixit-web`).
    - Generate a secure `SECRET_KEY`.
-   - Run the build command (`pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate`).
+   - Run the build command (`pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate && python manage.py setup_site`). `setup_site` creates your admin account and, while `DEMO_MODE=True`, loads the demo campus on the first deploy.
    - Start Gunicorn (`gunicorn config.wsgi --bind 0.0.0.0:$PORT`).
    - Configure health checks to ping `/healthz`.
-6. Once deployed, note down your public URL (e.g., `https://fixit-web-xxxx.onrender.com`).
+6. Once deployed, note down your public URL (e.g., `https://fixit-web-xxxx.onrender.com`). Sign in with your `ADMIN_EMAIL` and open `/portal/` to create staff and worker accounts.
+7. For real use, set `DEMO_MODE` to `False` in the Render dashboard. This removes the demo clock and demo sign-in hints; existing data is kept. To start empty, deploy with `DEMO_MODE=False` from the start.
 
 ---
 
@@ -40,6 +41,8 @@ FixIt contains a preconfigured [`render.yaml`](file:///c:/Users/MAHENDRA/Desktop
 | `DATABASE_URL` | PostgreSQL connection string | Yes | Linked from `fixit-db` |
 | `ALLOWED_HOSTS` | Permitted hostnames | Yes | `.onrender.com,localhost` |
 | `CSRF_TRUSTED_ORIGINS` | Permitted CSRF origins | Yes | `https://*.onrender.com` |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Main admin account created on deploy | Yes | Your admin email and a strong password |
+| `ALLOW_STUDENT_SIGNUP` | Let students self-register | No | `True` |
 | `DEMO_MODE` | Enable simulated clock and demo tools | No | `True` for evaluation / `False` for strict prod |
 | `DEMO_PASSWORD` | Password for standard demo users | No | `DemoFixItPass123!` |
 | `APP_VERSION` | Application release identifier | No | Git commit SHA or version tag |

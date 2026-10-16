@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% load fixit %}
+
+{% block title %}{{ ticket.code }} {{ ticket.title }} - FixIt{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="small mb-2">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'tickets:list' %}">Complaints</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ ticket.code }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div>
+        <h1 class="h3 page-title mb-1"><span class="text-muted text-tabular">{{ ticket.code }}</span> {{ ticket.title }}</h1>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            {% status_badge ticket %}
+            {% band_badge ticket.priority_band %}
+            <span class="small text-muted">{{ ticket.priority_band|band_name }} priority &middot; score {{ ticket.priority_score }}/100</span>
+            {% sla_badge ticket %}
+            {% if ticket.safety_flag %}<span class="badge text-bg-danger">⚠ Safety risk</span>{% endif %}
+            {% if ticket.is_recurrence %}<span class="badge text-bg-light border" title="Same problem at this location in the last 30 days">Recurring</span>{% endif %}
+        </div>
+    </div>
+    {% if ticket.merged_into %}
+    <a class="btn btn-sm btn-outline-secondary" href="{{ ticket.merged_into.get_absolute_url }}">Merged into {{ ticket.merged_into.code }} →</a>
+    {% endif %}
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        {% if off_track %}
+        <p class="mb-0 text-muted">This complaint is <strong>{{ ticket.get_status_display|lower }}</strong>{% if ticket.closed_at %} ({{ ticket.closed_at|date:"d M Y, H:i" }}){% endif %}.</p>
+        {% else %}
+        <ol class="stepper" aria-label="Progress">
+            {% for step in steps %}
+            <li class="{% if step.done %}done{% endif %} {% if step.current %}current{% endif %}">
+                {{ step.label }}
+                {% if step.time %}<span class="time">{{ step.time|date:"d M, H:i" }}</span>{% endif %}
+            </li>
+            {% endfor %}
+        </ol>
+        {% if ticket.status == "WAITING_PARTS" or ticket.status == "WAITING_ACCESS" or ticket.status == "REOPENED" or ticket.status == "CLOSED_UNVERIFIED" %}
+        <p class="small text-center mt-3 mb-0 text-{{ ticket.status|status_class }}">Current: <strong>{{ ticket.get_status_display }}</strong>{% if ticket.is_paused %} - the SLA clock is paused{% endif %}</p>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card mb-4">
+            <div class="card-header">Details</div>
+            <div class="card-body">
+                <p class="mb-3" style="white-space: pre-line">{{ ticket.description }}</p>
+                <dl class="row small mb-0">
+                    <dt class="col-sm-4 text-muted fw-normal">Category</dt><dd class="col-sm-8">{{ ticket.get_category_display }}</dd>
+                    <dt class="col-sm-4 text-muted fw-normal">Severity</dt><dd class="col-sm-8">{{ ticket.get_severity_display }}</dd>
+                    <dt class="col-sm-4 text-muted fw-normal">Location</dt><dd class="col-sm-8">{{ ticket.location.full_name }}{% if ticket.location.floor %} (floor {{ ticket.location.floor }}){% endif %}{% if ticket.location_detail %} &middot; {{ ticket.location_detail }}{% endif %}</dd>
+                    <dt class="col-sm-4 text-muted fw-normal">Others affected</dt><dd class="col-sm-8">{{ ticket.affected_people }}</dd>
+                    <dt class="col-sm-4 text-muted fw-normal">Raised by</dt><dd class="col-sm-8">{% if ticket.created_by %}{{ ticket.created_by.display_name }}{% if ticket.created_by.phone and user.pk != ticket.created_by.pk %} &middot; <a href="tel:{{ ticket.created_by.phone }}">{{ ticket.created_by.phone }}</a>{% endif %}{% else %}<span class="text-muted">Deleted user</span>{% endif %}</dd>
+                    <dt class="col-sm-4 text-muted fw-normal">Raised on</dt><dd class="col-sm-8">{{ ticket.created_at|date:"D d M Y, H:i" }} ({{ ticket.created_at|timeago }})</dd>
+                    <dt class="col-sm-4 text-muted fw-normal">Target fix time</dt><dd class="col-sm-8">{{ ticket.sla_hours }} hours{% if ticket.effective_due_at %} &middot; due {{ ticket.effective_due_at|date:"d M Y, H:i" }}{% endif %}{% if ticket.paused_seconds %} &middot; paused {{ ticket.paused_seconds|duration }} so far{% endif %}</dd>
+                    <dt class="col-sm-4 text-muted fw-normal">Worker</dt>
+                    <dd class="col-sm-8">
+                        {% if ticket.assigned_to %}
+                            {{ ticket.assigned_to.display_name }} ({{ ticket.assigned_to.get_specialty_display }})
+                            {% if ticket.assigned_to.phone and user.pk != ticket.assigned_to.pk %} &middot; <a href="tel:{{ ticket.assigned_to.phone }}">{{ ticket.assigned_to.phone }}</a>{% endif %}
+                        {% else %}<span class="text-muted">Not assigned yet</span>{% endif %}
+                    </dd>
+                    {% if ticket.access_attempts %}<dt class="col-sm-4 text-muted fw-normal">Access attempts</dt><dd class="col-sm-8">{{ ticket.access_attempts }} failed</dd>{% endif %}
+                    {% if ticket.reopen_count %}<dt class="col-sm-4 text-muted fw-normal">Reopened</dt><dd class="col-sm-8">{{ ticket.reopen_count }} time{{ ticket.reopen_count|pluralize }}</dd>{% endif %}
+                    {% if ticket.reported_fixed_at or ticket.work_notes %}
+                    <dt class="col-sm-4 text-muted fw-normal">Repair report</dt><dd class="col-sm-8">{{ ticket.work_notes|default:"-" }}{% if ticket.material_cost %} &middot; materials {{ ticket.material_cost|inr }}{% endif %}</dd>
+                    {% endif %}
+                    {% if ticket.verified_at %}<dt class="col-sm-4 text-muted fw-normal">Verified</dt><dd class="col-sm-8">{{ ticket.verified_at|date:"d M Y, H:i" }} &middot; {{ ticket.get_verified_method_display }}{% if ticket.resolution_hours %} &middot; fixed in {{ ticket.resolution_hours }} h{% endif %}</dd>{% endif %}
+                    {% if payment %}<dt class="col-sm-4 text-muted fw-normal">Worker payment</dt><dd class="col-sm-8">{{ payment.amount|inr }} &middot; {{ payment.get_status_display }}</dd>{% endif %}
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">Timeline</div>
+            <div class="card-body">
+                <ul class="timeline">
+                    {% for e in events %}
+                    <li class="k-{{ e.kind }}">
+                        <div class="small">
+                            <strong>{% if e.actor %}{{ e.actor.display_name }}{% else %}FixIt system{% endif %}</strong>
+                            {% if e.kind == "created" %}raised the complaint
+                            {% elif e.kind == "comment" %}commented
+                            {% elif e.kind == "reminder" %}sent a reminder
+                            {% elif e.kind == "reassigned" %}reassigned the job
+                            {% elif e.to_status %}changed status to <span class="badge rounded-pill text-bg-{{ e.to_status|status_class }}{% if e.to_status|status_class == 'warning' %} text-dark{% endif %}">{{ e.to_status|status_label }}</span>
+                            {% endif %}
+                            <span class="text-muted">&middot; {{ e.created_at|date:"d M Y, H:i" }}</span>
+                        </div>
+                        {% if e.message and e.kind != "created" %}<div class="small text-secondary mt-1" style="white-space: pre-line">{{ e.message }}</div>{% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% if can_comment %}
+                <form method="post" action="{% url 'tickets:comment' ticket.pk %}" class="mt-3">
+                    {% csrf_token %}
+                    {{ comment_form.message }}
+                    <div class="text-end mt-2"><button class="btn btn-sm btn-outline-primary" type="submit">Add comment</button></div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5 order-first order-lg-last">
+        {% if show_code and ticket.is_open %}
+        <div class="card mb-4 border-success">
+            <div class="card-body">
+                <div class="small text-muted mb-1">Your completion code</div>
+                <div class="code-box text-success">{{ ticket.completion_code }}</div>
+                <div class="small text-muted mt-1">Give this code to the worker <strong>only after</strong> you have checked that the problem is really fixed. It confirms the repair on the spot.</div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if actions %}
+        <div class="card mb-4">
+            <div class="card-header">What would you like to do?</div>
+            <div class="card-body d-grid gap-2">
+                {% for a in actions %}
+                    {% if not a.fields %}
+                    <form method="post" action="{% url 'tickets:action' ticket.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="to" value="{{ a.to }}">
+                        <input type="hidden" name="from_status" value="{{ ticket.status }}">
+                        <button class="btn btn-{{ a.style|default:'primary' }} w-100" type="submit">{{ a.label }}</button>
+                    </form>
+                    {% else %}
+                    <button class="btn btn-{{ a.style|default:'primary' }} w-100" type="button" data-bs-toggle="collapse" data-bs-target="#act-{{ a.to }}" aria-expanded="false" aria-controls="act-{{ a.to }}">{{ a.label }}</button>
+                    <div class="collapse" id="act-{{ a.to }}">
+                        <form method="post" action="{% url 'tickets:action' ticket.pk %}" class="border rounded-3 p-3 bg-light">
+                            {% csrf_token %}
+                            <input type="hidden" name="to" value="{{ a.to }}">
+                            <input type="hidden" name="from_status" value="{{ ticket.status }}">
+                            {% for f in a.fields %}
+                                {% if f == "assignee" %}
+                                <label class="form-label small fw-semibold" for="assignee-{{ a.to }}">Worker</label>
+                                <select class="form-select mb-2" name="assignee" id="assignee-{{ a.to }}" required>
+                                    <option value="">Choose a worker...</option>
+                                    {% for w in workers %}
+                                    <option value="{{ w.pk }}" {% if w.pk == ticket.assigned_to_id %}selected{% endif %}>{{ w.display_name }} - {{ w.get_specialty_display }}{% if w.area %} - {{ w.area.name }}{% endif %} - {{ w.open_jobs }} open job{{ w.open_jobs|pluralize }}{% if w.same_area %} (same area){% endif %}{% if w.availability != "on_duty" %} [{{ w.get_availability_display }}]{% endif %}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text mb-2">Workers who cover this building are listed first.</div>
+                                {% elif f == "reason" %}
+                                <label class="form-label small fw-semibold" for="reason-{{ a.to }}">Reason <span class="text-danger">*</span></label>
+                                <textarea class="form-control mb-2" rows="2" name="reason" id="reason-{{ a.to }}" required maxlength="1000"></textarea>
+                                {% elif f == "reason_optional" %}
+                                <label class="form-label small fw-semibold" for="reason-{{ a.to }}">Reason (optional)</label>
+                                <textarea class="form-control mb-2" rows="2" name="reason" id="reason-{{ a.to }}" maxlength="1000"></textarea>
+                                {% elif f == "target" %}
+                                <label class="form-label small fw-semibold" for="target-{{ a.to }}">Duplicate of complaint no.</label>
+                                <input class="form-control mb-2" name="target" id="target-{{ a.to }}" placeholder="FIX-00012" required>
+                                {% if similar %}<div class="form-text mb-2">Similar open complaints: {% for s in similar %}<a href="{{ s.get_absolute_url }}">{{ s.code }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</div>{% endif %}
+                                {% elif f == "checklist" %}
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="checklist" id="checklist-{{ a.to }}" required>
+                                    <label class="form-check-label small" for="checklist-{{ a.to }}">I tested the repair, it works, and I cleaned up the work area.</label>
+                                </div>
+                                {% elif f == "work_notes" %}
+                                <label class="form-label small fw-semibold" for="notes-{{ a.to }}">What did you fix?</label>
+                                <textarea class="form-control mb-2" rows="2" name="work_notes" id="notes-{{ a.to }}" maxlength="2000" placeholder="e.g. Replaced fan capacitor"></textarea>
+                                {% elif f == "material_cost" %}
+                                <label class="form-label small fw-semibold" for="cost-{{ a.to }}">Material cost (₹)</label>
+                                <input class="form-control mb-2" type="number" min="0" step="0.01" name="material_cost" id="cost-{{ a.to }}" value="0">
+                                {% elif f == "code_optional" %}
+                                <label class="form-label small fw-semibold" for="code-{{ a.to }}">Requester's completion code (optional)</label>
+                                <input class="form-control mb-2" name="code" id="code-{{ a.to }}" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="6 digits - verifies the fix immediately">
+                                {% elif f == "code" %}
+                                <label class="form-label small fw-semibold" for="code-{{ a.to }}">Completion code from the requester</label>
+                                <input class="form-control mb-2" name="code" id="code-{{ a.to }}" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="6 digits">
+                                {% endif %}
+                            {% endfor %}
+                            <button class="btn btn-{{ a.style|default:'primary' }} btn-sm" type="submit">Confirm: {{ a.label }}</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% elif ticket.is_open and ticket.status == "REPORTED_FIXED" and user.pk != ticket.created_by_id %}
+        <div class="alert alert-warning small">Waiting for the requester to confirm the fix (or for the worker to enter the requester's completion code).</div>
+        {% endif %}
+
+        {% if can_reassign %}
+        <div class="card mb-4">
+            <div class="card-header">Reassign</div>
+            <div class="card-body">
+                <form method="post" action="{% url 'tickets:reassign' ticket.pk %}">
+                    {% csrf_token %}
+                    <select class="form-select mb-2" name="assignee" required aria-label="New worker">
+                        <option value="">Choose a worker...</option>
+                        {% for w in workers %}{% if w.pk != ticket.assigned_to_id %}
+                        <option value="{{ w.pk }}">{{ w.display_name }} - {{ w.get_specialty_display }} - {{ w.open_jobs }} open{% if w.same_area %} (same area){% endif %}</option>
+                        {% endif %}{% endfor %}
+                    </select>
+                    <input class="form-control mb-2" name="reason" placeholder="Reason (optional)" maxlength="500">
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Reassign job</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if can_remind %}
+        <div class="card mb-4">
+            <div class="card-header">Send a reminder</div>
+            <div class="card-body">
+                <form method="post" action="{% url 'tickets:remind' ticket.pk %}">
+                    {% csrf_token %}
+                    <label class="form-label small fw-semibold" for="{{ reminder_form.target.id_for_label }}">Send to</label>
+                    {{ reminder_form.target }}
+                    <div class="mt-2">{{ reminder_form.message }}</div>
+                    <label class="form-label small fw-semibold mt-2" for="{{ reminder_form.remind_at.id_for_label }}">When (leave empty for now)</label>
+                    {{ reminder_form.remind_at }}
+                    <button class="btn btn-sm btn-outline-warning mt-2" type="submit">Send reminder</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if similar %}
+        <div class="card mb-4">
+            <div class="card-header">Similar open complaints here</div>
+            <ul class="list-group list-group-flush small">
+                {% for s in similar %}
+                <li class="list-group-item d-flex justify-content-between"><a href="{{ s.get_absolute_url }}">{{ s.code }} {{ s.title }}</a>{% status_badge s %}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

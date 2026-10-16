@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% load fixit %}
+
+{% block title %}{% if manage %}Worker Payments{% else %}My Earnings{% endif %} - FixIt{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 page-title mb-1">{% if manage %}Worker payments{% else %}My earnings{% endif %}</h1>
+        <p class="text-muted small mb-0">Job payments are created automatically when a repair is <strong>confirmed fixed</strong> (worker rate + material cost).</p>
+    </div>
+    {% if manage %}
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" href="?{% query_replace export='csv' page=None %}">Export CSV</a>
+        <a class="btn btn-primary" href="{% url 'payments:create' %}">+ Record payment</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Pending to pay</div><div class="value">{{ summary.pending|inr }}</div><div class="hint">{{ summary.pending_count }} item{{ summary.pending_count|pluralize }}</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Paid this month</div><div class="value">{{ summary.paid_this_month|inr }}</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Paid all time</div><div class="value">{{ summary.paid|inr }}</div><div class="hint">{{ summary.paid_count }} payment{{ summary.paid_count|pluralize }}</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">{% if manage %}Workers with pending pay{% else %}My rate per job{% endif %}</div><div class="value">{% if manage %}{{ summary.workers_owed }}{% else %}{{ user.rate_per_job|inr }}{% endif %}</div></div></div>
+</div>
+
+{% if manage and per_worker %}
+<div class="card mb-4">
+    <div class="card-header">By worker</div>
+    <div class="table-responsive">
+        <table class="table table-sm mb-0 align-middle">
+            <thead class="table-light small text-muted"><tr><th>Worker</th><th class="text-end">Jobs paid for</th><th class="text-end">Pending</th><th class="text-end">Paid</th><th class="text-end">Pay all pending</th></tr></thead>
+            <tbody>
+            {% for w in per_worker %}
+                <tr>
+                    <td>{% if w.worker_id %}<a href="{% url 'portal:user_detail' w.worker_id %}">{{ w.worker_name }}</a>{% else %}{{ w.worker_name }} <span class="text-muted small">(deleted)</span>{% endif %}</td>
+                    <td class="text-end text-tabular">{{ w.jobs }}</td>
+                    <td class="text-end text-tabular fw-semibold">{{ w.pending|default:0|inr }}</td>
+                    <td class="text-end text-tabular">{{ w.paid|default:0|inr }}</td>
+                    <td class="text-end">
+                        {% if w.pending and w.worker_id %}
+                        <form method="post" action="{% url 'payments:pay_all' w.worker_id %}" class="d-inline-flex gap-1 justify-content-end">
+                            {% csrf_token %}
+                            <select name="method" class="form-select form-select-sm" style="width: 8rem" aria-label="Payment method">
+                                {% for value, label in methods %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+                            </select>
+                            <input name="reference" class="form-control form-control-sm" style="width: 8rem" placeholder="Ref. no." aria-label="Reference number">
+                            <button class="btn btn-sm btn-success" type="submit">Pay {{ w.pending|inr }}</button>
+                        </form>
+                        {% else %}<span class="text-muted small">-</span>{% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<form method="get" class="card card-body py-3 mb-3">
+    <div class="row g-2 align-items-end">
+        {% if manage %}
+        <div class="col-6 col-md-3">
+            <label class="form-label small mb-1" for="p-worker">Worker</label>
+            <select id="p-worker" class="form-select form-select-sm" name="worker">
+                <option value="">All workers</option>
+                {% for w in workers %}<option value="{{ w.pk }}" {% if filters.worker == w.pk|stringformat:"s" %}selected{% endif %}>{{ w.display_name }}</option>{% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        <div class="col-6 col-md-2">
+            <label class="form-label small mb-1" for="p-status">Status</label>
+            <select id="p-status" class="form-select form-select-sm" name="status">
+                <option value="">All</option>
+                {% for value, label in statuses %}<option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small mb-1" for="p-kind">Type</label>
+            <select id="p-kind" class="form-select form-select-sm" name="kind">
+                <option value="">All</option>
+                {% for value, label in kinds %}<option value="{{ value }}" {% if filters.kind == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small mb-1" for="p-month">Month</label>
+            <input id="p-month" class="form-control form-control-sm" type="month" name="month" value="{{ filters.month }}">
+        </div>
+        <div class="col-8 col-md-2">
+            <label class="form-label small mb-1" for="p-q">Search</label>
+            <input id="p-q" class="form-control form-control-sm" name="q" value="{{ filters.q }}" placeholder="Name, ref...">
+        </div>
+        <div class="col-4 col-md-1 d-grid"><button class="btn btn-sm btn-primary" type="submit">Filter</button></div>
+    </div>
+</form>
+
+<div class="card">
+    {% if payments %}
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light small text-muted">
+                <tr><th>Date</th>{% if manage %}<th>Worker</th>{% endif %}<th>For</th><th class="text-end">Amount</th><th>Status</th>{% if manage %}<th class="text-end">Action</th>{% endif %}</tr>
+            </thead>
+            <tbody>
+            {% for p in payments %}
+                <tr>
+                    <td class="small text-nowrap">{{ p.created_at|date:"d M Y" }}</td>
+                    {% if manage %}<td class="small">{{ p.worker_name }}</td>{% endif %}
+                    <td class="small">
+                        <span class="badge text-bg-light border">{{ p.get_kind_display }}</span>
+                        {% if p.ticket %}<a href="{{ p.ticket.get_absolute_url }}">{{ p.ticket.code }}</a>{% endif %}
+                        <div class="text-muted">{{ p.description }}</div>
+                    </td>
+                    <td class="text-end text-tabular fw-semibold">{{ p.amount|inr }}</td>
+                    <td class="small">
+                        {% if p.status == "paid" %}<span class="badge text-bg-success">✓ Paid</span><div class="text-muted">{{ p.paid_at|date:"d M Y" }} &middot; {{ p.get_method_display }}{% if p.reference %} &middot; {{ p.reference }}{% endif %}</div>
+                        {% elif p.status == "pending" %}<span class="badge text-bg-warning text-dark">Pending</span>
+                        {% else %}<span class="badge text-bg-secondary">Cancelled</span>{% endif %}
+                    </td>
+                    {% if manage %}
+                    <td class="text-end">
+                        {% if p.status == "pending" %}
+                        <form method="post" action="{% url 'payments:mark_paid' p.pk %}" class="d-inline-flex flex-wrap gap-1 justify-content-end">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <select name="method" class="form-select form-select-sm" style="width: 7.5rem" aria-label="Payment method">
+                                {% for value, label in methods %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+                            </select>
+                            <input name="reference" class="form-control form-control-sm" style="width: 7rem" placeholder="Ref. no." aria-label="Reference number">
+                            <button class="btn btn-sm btn-success" type="submit">Mark paid</button>
+                        </form>
+                        <div class="mt-1">
+                            <a class="btn btn-sm btn-link p-0 me-2" href="{% url 'payments:edit' p.pk %}">Edit</a>
+                            <form method="post" action="{% url 'payments:cancel' p.pk %}" class="d-inline">
+                                {% csrf_token %}<button class="btn btn-sm btn-link text-danger p-0" type="submit">Cancel</button>
+                            </form>
+                        </div>
+                        {% else %}<span class="text-muted small">-</span>{% endif %}
+                    </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">No payments found.</div>
+    {% endif %}
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}

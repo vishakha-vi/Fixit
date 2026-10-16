@@ -1,0 +1,119 @@
+{% extends "portal/base_portal.html" %}
+{% load fixit %}
+
+{% block portal_head_title %}{{ target.display_name }}{% endblock %}
+{% block portal_title %}{{ target.display_name }} <span class="badge text-bg-secondary align-middle fs-6">{{ target.get_role_display }}</span>{% if not target.is_active %} <span class="badge text-bg-danger align-middle fs-6">Deactivated</span>{% endif %}{% endblock %}
+{% block portal_actions %}
+<div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-primary" href="{% url 'portal:user_edit' target.pk %}">Edit account &amp; access</a>
+    <a class="btn btn-outline-secondary" href="{% url 'portal:user_password' target.pk %}">Set password</a>
+    {% if target.pk != user.pk %}
+    <form method="post" action="{% url 'portal:user_toggle_active' target.pk %}">
+        {% csrf_token %}
+        <button class="btn btn-outline-warning" type="submit">{% if target.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+    </form>
+    <a class="btn btn-outline-danger" href="{% url 'portal:user_delete' target.pk %}">Delete</a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block portal_content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">Profile</div>
+            <div class="card-body">
+                <dl class="small mb-0">
+                    <dt class="text-muted fw-normal">Email (login)</dt><dd>{{ target.email|default:"-" }}</dd>
+                    <dt class="text-muted fw-normal">Username</dt><dd>{{ target.username }}</dd>
+                    <dt class="text-muted fw-normal">Phone</dt><dd>{{ target.phone|default:"-" }}</dd>
+                    <dt class="text-muted fw-normal">Department / room</dt><dd>{{ target.department|default:"-" }}</dd>
+                    <dt class="text-muted fw-normal">Joined</dt><dd>{{ target.date_joined|date:"d M Y, H:i" }}</dd>
+                    <dt class="text-muted fw-normal">Last sign-in</dt><dd>{% if target.last_login %}{{ target.last_login|date:"d M Y, H:i" }}{% else %}never{% endif %}</dd>
+                    {% if target.role == "worker" %}
+                    <dt class="text-muted fw-normal">Skill</dt><dd>{{ target.get_specialty_display }}</dd>
+                    <dt class="text-muted fw-normal">Home area</dt><dd>{{ target.area.name|default:"-" }}</dd>
+                    <dt class="text-muted fw-normal">Located at</dt><dd>{{ target.current_location.full_name|default:"not shared" }}{% if target.location_updated_at %} <span class="text-muted">({{ target.location_updated_at|timeago }})</span>{% endif %}</dd>
+                    <dt class="text-muted fw-normal">Availability</dt><dd>{{ target.get_availability_display }}</dd>
+                    <dt class="text-muted fw-normal">Pay per verified job</dt><dd>{{ target.rate_per_job|inr }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Feature access</span>
+                {% if not target.is_admin_role %}
+                <form method="post" action="{% url 'portal:user_reset_features' target.pk %}">
+                    {% csrf_token %}<button class="btn btn-sm btn-link p-0" type="submit">Reset to role defaults</button>
+                </form>
+                {% endif %}
+            </div>
+            <ul class="list-group list-group-flush small">
+                {% for code, label, enabled in features %}
+                <li class="list-group-item d-flex justify-content-between">{{ label }} {% if enabled %}<span class="badge text-bg-success">✓ On</span>{% else %}<span class="badge text-bg-light border">Off</span>{% endif %}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="row g-3 mb-4">
+            <div class="col-4"><div class="stat-tile"><div class="label">Complaints raised</div><div class="value">{{ raised_count }}</div></div></div>
+            <div class="col-4"><div class="stat-tile"><div class="label">Jobs assigned</div><div class="value">{{ assigned_count }}</div><div class="hint">{{ completed_count }} confirmed fixed</div></div></div>
+            <div class="col-4"><div class="stat-tile"><div class="label">Payments</div><div class="value">{{ payment_totals.paid|inr }}</div><div class="hint">{{ payment_totals.pending|inr }} pending</div></div></div>
+        </div>
+
+        {% if raised %}
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between"><span>Complaints raised</span><span class="small text-muted fw-normal">latest 20</span></div>
+            {% include "partials/ticket_table.html" with tickets=raised %}
+        </div>
+        {% endif %}
+
+        {% if assigned %}
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between"><span>Jobs assigned</span><span class="small text-muted fw-normal">latest 20</span></div>
+            {% include "partials/ticket_table.html" with tickets=assigned %}
+        </div>
+        {% endif %}
+
+        {% if payments %}
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between"><span>Payments</span><a class="small" href="{% url 'payments:list' %}?worker={{ target.pk }}">All payments</a></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0 align-middle small">
+                    <thead class="table-light text-muted"><tr><th>Date</th><th>For</th><th class="text-end">Amount</th><th>Status</th></tr></thead>
+                    <tbody>
+                    {% for p in payments %}
+                    <tr><td>{{ p.created_at|date:"d M Y" }}</td><td>{{ p.get_kind_display }} {% if p.ticket %}<a href="{{ p.ticket.get_absolute_url }}">{{ p.ticket.code }}</a>{% endif %}</td><td class="text-end text-tabular">{{ p.amount|inr }}</td><td>{{ p.get_status_display }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card mb-4">
+            <div class="card-header">Recent activity</div>
+            <ul class="list-group list-group-flush small">
+                {% for e in activity %}
+                <li class="list-group-item"><a href="{{ e.ticket.get_absolute_url }}">{{ e.ticket.code }}</a> {% if e.to_status %}{{ e.to_status|status_label }}{% else %}{{ e.get_kind_display }}{% endif %}{% if e.message %}: <span class="text-muted">{{ e.message|truncatechars:90 }}</span>{% endif %} <span class="text-muted">&middot; {{ e.created_at|timeago }}</span></li>
+                {% empty %}
+                <li class="list-group-item text-muted">No activity yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        {% if reminders %}
+        <div class="card">
+            <div class="card-header">Latest reminders received</div>
+            <ul class="list-group list-group-flush small">
+                {% for r in reminders %}
+                <li class="list-group-item">{% if r.is_done %}<span class="text-muted">✓</span>{% else %}<span class="text-warning">●</span>{% endif %} {{ r.message }} <span class="text-muted">&middot; {{ r.due_at|timeago }}</span></li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

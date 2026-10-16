@@ -1,0 +1,66 @@
+{% extends "portal/base_portal.html" %}
+{% load fixit %}
+
+{% block portal_head_title %}Users{% endblock %}
+{% block portal_title %}Users &amp; access{% endblock %}
+{% block portal_actions %}<a class="btn btn-primary" href="{% url 'portal:user_create' %}">+ Create account</a>{% endblock %}
+
+{% block portal_content %}
+<form method="get" class="card card-body py-3 mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-5">
+            <label class="form-label small mb-1" for="u-q">Search</label>
+            <input id="u-q" class="form-control form-control-sm" name="q" value="{{ filters.q }}" placeholder="Name, email, phone, room...">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label small mb-1" for="u-role">Role</label>
+            <select id="u-role" class="form-select form-select-sm" name="role">
+                <option value="">All roles</option>
+                {% for value, label in roles %}<option value="{{ value }}" {% if filters.role == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small mb-1" for="u-status">Status</label>
+            <select id="u-status" class="form-select form-select-sm" name="status">
+                <option value="">All</option>
+                <option value="active" {% if filters.status == "active" %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if filters.status == "inactive" %}selected{% endif %}>Deactivated</option>
+            </select>
+        </div>
+        <div class="col-12 col-md-2 d-grid"><button class="btn btn-sm btn-primary" type="submit">Filter</button></div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="card-header small text-muted fw-normal">{{ page.paginator.count }} account{{ page.paginator.count|pluralize }}</div>
+    {% if users %}
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light small text-muted">
+                <tr><th>Name</th><th>Email (login)</th><th>Role</th><th class="d-none d-lg-table-cell">Phone / area</th><th class="text-end d-none d-md-table-cell">Complaints</th><th class="d-none d-xl-table-cell">Last sign-in</th><th class="text-end">Actions</th></tr>
+            </thead>
+            <tbody>
+            {% for u in users %}
+                <tr class="{% if not u.is_active %}table-secondary{% endif %}">
+                    <td><a class="fw-semibold" href="{% url 'portal:user_detail' u.pk %}">{{ u.get_full_name|default:u.username }}</a>{% if not u.is_active %} <span class="badge text-bg-secondary">Deactivated</span>{% endif %}</td>
+                    <td class="small">{{ u.email|default:u.username }}</td>
+                    <td><span class="badge {% if u.role == 'admin' %}text-bg-dark{% elif u.role == 'worker' %}text-bg-warning text-dark{% elif u.role == 'staff' %}text-bg-info{% else %}text-bg-primary{% endif %}">{{ u.get_role_display }}</span></td>
+                    <td class="small d-none d-lg-table-cell">{{ u.phone|default:"-" }}{% if u.role == "worker" %}<div class="text-muted">{{ u.area.name|default:"no area" }}</div>{% elif u.department %}<div class="text-muted">{{ u.department }}</div>{% endif %}</td>
+                    <td class="text-end small text-tabular d-none d-md-table-cell">{% if u.role == "worker" %}{{ u.assigned }} assigned{% else %}{{ u.raised }} raised{% endif %}</td>
+                    <td class="small d-none d-xl-table-cell">{% if u.last_login %}{{ u.last_login|timeago }}{% else %}<span class="text-muted">never</span>{% endif %}</td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'portal:user_detail' u.pk %}">View</a>
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'portal:user_edit' u.pk %}">Edit</a>
+                        {% if u.pk != user.pk %}<a class="btn btn-sm btn-outline-danger" href="{% url 'portal:user_delete' u.pk %}">Delete</a>{% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">No accounts match.</div>
+    {% endif %}
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}

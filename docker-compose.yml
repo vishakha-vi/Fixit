@@ -22,6 +22,7 @@ services:
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
+             python manage.py setup_site &&
              gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3"
     environment:
       DEBUG: "False"
@@ -31,7 +32,9 @@ services:
       CSRF_TRUSTED_ORIGINS: "http://localhost:8000,http://127.0.0.1:8000"
       DEMO_MODE: "True"
       DEMO_PASSWORD: "DemoFixItPass123!"
-      APP_VERSION: "0.1.0-docker"
+      APP_VERSION: "1.0.0-docker"
+      ADMIN_EMAIL: "admin@fixit.local"
+      ADMIN_PASSWORD: "ChangeMe-Admin-2026"
       SECURE_SSL_REDIRECT: "False"
     ports:
       - "8000:8000"

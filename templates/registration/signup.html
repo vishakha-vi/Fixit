@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Student Sign Up - FixIt{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+            <h1 class="h4 fw-bold mb-1">Create your student account</h1>
+            <p class="text-muted small mb-4">Staff and worker accounts are created by the FixIt admin.</p>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% include "partials/form_errors.html" %}
+                <div class="row">
+                    <div class="col-sm-6">{% include "partials/field.html" with field=form.first_name %}</div>
+                    <div class="col-sm-6">{% include "partials/field.html" with field=form.last_name %}</div>
+                </div>
+                {% include "partials/field.html" with field=form.email %}
+                <div class="row">
+                    <div class="col-sm-6">{% include "partials/field.html" with field=form.phone %}</div>
+                    <div class="col-sm-6">{% include "partials/field.html" with field=form.department %}</div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">{% include "partials/field.html" with field=form.password1 %}</div>
+                    <div class="col-sm-6">{% include "partials/field.html" with field=form.password2 %}</div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 fw-semibold">Create account</button>
+            </form>
+            <p class="text-center small mt-3 mb-0">Already registered? <a href="{% url 'login' %}">Sign in</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

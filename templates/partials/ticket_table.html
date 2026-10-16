@@ -1,0 +1,37 @@
+{% load fixit %}
+{% if tickets %}
+<div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light small text-muted">
+            <tr>
+                <th scope="col">No.</th>
+                <th scope="col">Complaint</th>
+                <th scope="col" class="d-none d-md-table-cell">Location</th>
+                <th scope="col">Priority</th>
+                <th scope="col">Status</th>
+                <th scope="col" class="d-none d-lg-table-cell">Worker</th>
+                <th scope="col" class="d-none d-sm-table-cell">SLA</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for t in tickets %}
+            <tr>
+                <td class="text-nowrap text-tabular"><a class="fw-semibold" href="{{ t.get_absolute_url }}">{{ t.code }}</a></td>
+                <td>
+                    <a class="row-link" href="{{ t.get_absolute_url }}">{{ t.title }}</a>
+                    {% if t.safety_flag %}<span class="badge text-bg-danger ms-1" title="Safety risk">Safety</span>{% endif %}
+                    <div class="small text-muted">{{ t.get_category_display }} &middot; {{ t.created_at|timeago }}</div>
+                </td>
+                <td class="d-none d-md-table-cell small">{{ t.location.building.name }}<div class="text-muted">{{ t.location.name }}</div></td>
+                <td>{% band_badge t.priority_band %}</td>
+                <td>{% status_badge t %}</td>
+                <td class="d-none d-lg-table-cell small">{% if t.assigned_to %}{{ t.assigned_to.display_name }}{% else %}<span class="text-muted">Not assigned</span>{% endif %}</td>
+                <td class="d-none d-sm-table-cell">{% sla_badge t %}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">{{ empty|default:"No complaints found." }}</div>
+{% endif %}

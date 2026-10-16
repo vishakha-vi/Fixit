@@ -57,3 +57,26 @@ def test_golden_examples_match_reference_scorer():
             f"Example {ex['id']} ({ex['description']}): computed band {computed_band} "
             f"!= expected {ex['expected_band']}"
         )
+
+
+def test_golden_examples_match_real_engine():
+    from apps.tickets.priority import compute_priority_score_and_band as real
+
+    for ex in load_priority_rules()["golden_examples"]:
+        assert real(ex["inputs"]) == (ex["expected_score"], ex["expected_band"]), ex["description"]
+
+
+def test_engine_bands_match_yaml():
+    from apps.tickets.priority import BANDS
+
+    yaml_bands = {b["id"]: (b["min_score"], b["max_score"], b["sla_hours"]) for b in load_priority_rules()["bands"]}
+    assert {b["id"]: (b["min_score"], b["max_score"], b["sla_hours"]) for b in BANDS} == yaml_bands
+
+
+def test_critical_location_keywords_use_whole_words(db):
+    from apps.locations.models import Building, Location
+    from apps.tickets.priority import is_critical_location
+
+    b = Building.objects.create(name="Academic Block", code="AB")
+    assert is_critical_location(Location.objects.create(building=b, name="Physics Lab")) is True
+    assert is_critical_location(Location.objects.create(building=b, name="Collaboration Room")) is False

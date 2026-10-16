@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}No Access (403) - FixIt{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center text-center py-5">
+    <div class="col-md-7">
+        <div class="card border-0 shadow-sm rounded-4 p-5 bg-white">
+            <div class="display-1 text-warning fw-bold mb-2">403</div>
+            <h1 class="h4 fw-bold mb-3">You don't have access to this feature</h1>
+            <p class="text-secondary mb-4">
+                Your account has not been given this feature. Ask the FixIt admin to turn it on for you.
+            </p>
+            <div>
+                <a href="{% url 'home' %}" class="btn btn-outline-primary px-4 fw-semibold">Return to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.locations",
     "apps.tickets",
+    "apps.payments",
 ]
 
 MIDDLEWARE = [
@@ -58,6 +59,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.core.middleware.DueTasksMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -75,6 +77,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.core.context_processors.fixit",
             ],
         },
     },
@@ -95,6 +98,9 @@ DATABASES = {
 
 # Custom User Model
 AUTH_USER_MODEL = "accounts.User"
+
+# Sign in with email address or username
+AUTHENTICATION_BACKENDS = ["apps.accounts.backends.EmailOrUsernameBackend"]
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -149,6 +155,28 @@ if not DEBUG:
     if os.environ.get("SECURE_SSL_REDIRECT", "True").lower() in ("true", "1", "t", "yes"):
         SECURE_SSL_REDIRECT = True
 
+# Bootstrap alert classes for django.contrib.messages
+MESSAGE_TAGS = {40: "danger"}
+
+# Email notifications for reminders (console output unless SMTP is configured)
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+if EMAIL_HOST:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+    EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() in ("true", "1", "t", "yes")
+    EMAIL_TIMEOUT = 10
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_NOTIFICATIONS = bool(EMAIL_HOST)
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "FixIt <no-reply@fixit.local>")
+
+# Students may create their own accounts; staff and workers are created by admins
+ALLOW_STUDENT_SIGNUP = os.environ.get("ALLOW_STUDENT_SIGNUP", "True").lower() in (
+    "true", "1", "t", "yes"
+)
+
 # Demo mode & Versioning
 DEMO_MODE = os.environ.get("DEMO_MODE", "False").lower() in ("true", "1", "t", "yes")
-APP_VERSION = os.environ.get("APP_VERSION", "0.1.0-phase0")
+APP_VERSION = os.environ.get("APP_VERSION", "1.0.0-mvp")

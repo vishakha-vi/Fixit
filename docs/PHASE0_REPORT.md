@@ -11,7 +11,7 @@
 
 Phase 0 of **FixIt** establishes the architectural foundation, core platform scaffolding, centralized time-simulation service, test automation harness, and production deployment specifications.
 
-All tasks (T1 through T10) outlined in [`PHASE0_PLAN.md`](file:///c:/Users/MAHENDRA/Desktop/hackvision%20website/docs/PHASE0_PLAN.md) have been completed, verified against specifications, and validated via automated unit, integration, and runtime smoke tests.
+All tasks (T1 through T10) outlined in [`PHASE0_PLAN.md`](PHASE0_PLAN.md) have been completed, verified against specifications, and validated via automated unit, integration, and runtime smoke tests.
 
 ---
 

@@ -1,5 +1,6 @@
 """Priority scoring and SLA calculation engine according to docs/priority_rules.yaml."""
 
+import re
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -23,7 +24,11 @@ RECURRENCE_BONUS = 10
 AGING_HALF_SLA_BONUS = 10
 AGING_OVERDUE_BONUS = 20
 
-CRITICAL_LOCATION_KEYWORDS = ["medical", "lab", "entrance", "mess", "clinic", "hospital"]
+# Matches docs/priority_rules.yaml critical_location.locations ("medical room" matched as "medical")
+CRITICAL_LOCATION_KEYWORDS = ["medical", "lab", "entrance", "mess"]
+_CRITICAL_LOCATION_RE = re.compile(
+    r"\b(" + "|".join(re.escape(k) for k in CRITICAL_LOCATION_KEYWORDS) + r")\b", re.IGNORECASE
+)
 
 BANDS = [
     {
@@ -55,6 +60,22 @@ BANDS = [
         "sla_hours": 168,
     },
 ]
+
+
+def is_critical_location(location) -> bool:
+    """A location is critical if flagged in admin or its name matches a critical keyword."""
+    if location is None:
+        return False
+    if location.effective_is_critical():
+        return True
+    return bool(_CRITICAL_LOCATION_RE.search(f"{location.building.name} {location.name}"))
+
+
+def get_band(band_id: str) -> dict[str, Any]:
+    for band in BANDS:
+        if band["id"] == band_id:
+            return band
+    return BANDS[-1]
 
 
 def get_band_for_score(score: int) -> dict[str, Any]:

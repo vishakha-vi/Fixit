@@ -1,0 +1,83 @@
+{% extends "portal/base_portal.html" %}
+{% load fixit %}
+
+{% block portal_title %}Admin portal{% endblock %}
+
+{% block portal_content %}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">All accounts</div><div class="value">{{ user_total }}</div><div class="hint">{{ inactive_users }} deactivated</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Open complaints</div><div class="value">{{ open_tickets }}</div><a class="hint" href="{% url 'tickets:list' %}?scope=unassigned">{{ unassigned }} without a worker</a></div></div>
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Awaiting confirmation</div><div class="value">{{ awaiting }}</div><div class="hint">reported fixed by workers</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Pending worker pay</div><div class="value">{{ payments.pending|inr }}</div><a class="hint" href="{% url 'payments:list' %}?status=pending">{{ payments.pending_count }} item{{ payments.pending_count|pluralize }}</a></div></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between"><span>Accounts by role</span><a class="small" href="{% url 'portal:users' %}">Manage users</a></div>
+            <ul class="list-group list-group-flush">
+                {% for value, label, count in role_counts %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <a href="{% url 'portal:users' %}?role={{ value }}">{{ label }}</a>
+                    <span class="d-flex gap-2 align-items-center">
+                        <span class="fw-semibold text-tabular">{{ count }}</span>
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'portal:user_create' %}?role={{ value }}">+ Add {{ label|lower }}</a>
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header">Newest accounts</div>
+            <ul class="list-group list-group-flush small">
+                {% for u in recent_users %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <a href="{% url 'portal:user_detail' u.pk %}">{{ u.display_name }}</a>
+                    <span class="text-muted">{{ u.get_role_display }} &middot; joined {{ u.date_joined|date:"d M Y" }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">Recent activity</div>
+            <ul class="list-group list-group-flush small">
+                {% for e in recent_events %}
+                <li class="list-group-item">
+                    <a href="{{ e.ticket.get_absolute_url }}">{{ e.ticket.code }}</a>
+                    {% if e.actor %}{{ e.actor.display_name }}{% else %}System{% endif %}:
+                    {% if e.to_status %}{{ e.to_status|status_label }}{% else %}{{ e.get_kind_display }}{% endif %}
+                    <span class="text-muted">&middot; {{ e.created_at|timeago }}</span>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">No activity yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header">Campus areas</div>
+            <div class="card-body small">
+                <p class="mb-2">{{ buildings }} building{{ buildings|pluralize }} and {{ locations }} room{{ locations|pluralize }}/area{{ locations|pluralize }} are set up for complaints.</p>
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'portal:areas' %}">Manage buildings &amp; rooms</a>
+                <a class="btn btn-sm btn-outline-secondary" href="/admin/">Raw database admin</a>
+            </div>
+        </div>
+        {% if demo_mode %}
+        <div class="card border-warning">
+            <div class="card-header">Demo clock</div>
+            <div class="card-body small">
+                <p class="mb-2">Move the FixIt clock forward to see SLA reminders, overdue alerts and the 72-hour auto-close.</p>
+                <form method="post" action="{% url 'portal:demo_clock' %}" class="d-flex flex-wrap gap-2">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-warning" name="action" value="1h" type="submit">+1 hour</button>
+                    <button class="btn btn-sm btn-outline-warning" name="action" value="24h" type="submit">+24 hours</button>
+                    <button class="btn btn-sm btn-outline-warning" name="action" value="72h" type="submit">+72 hours</button>
+                    <button class="btn btn-sm btn-outline-secondary" name="action" value="reset" type="submit">Reset to real time</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

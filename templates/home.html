@@ -1,16 +1,18 @@
 {% extends "base.html" %}
+{% load fixit %}
 
 {% block title %}FixIt - Campus Maintenance Portal{% endblock %}
 
 {% block content %}
+{% if not user.is_authenticated %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-lg-9">
         <div class="card border-0 shadow-sm p-4 p-md-5 mb-4 rounded-4 bg-white">
             <div class="d-flex align-items-center gap-3 mb-3">
                 <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-3 fs-2">🔧</div>
                 <div>
                     <h1 class="display-6 fw-bold mb-0">FixIt</h1>
-                    <p class="text-muted mb-0">Campus & Residential Maintenance Platform</p>
+                    <p class="text-muted mb-0">Campus &amp; Residential Maintenance Platform</p>
                 </div>
             </div>
 
@@ -19,22 +21,28 @@
             </p>
 
             <div class="row g-3 my-2">
-                <div class="col-md-4">
-                    <div class="border rounded-3 p-3 bg-light">
-                        <div class="fw-semibold text-primary">Requester</div>
-                        <small class="text-muted">Report breakdowns, track repair stages, confirm completion.</small>
+                <div class="col-md-3 col-6">
+                    <div class="border rounded-3 p-3 bg-light h-100">
+                        <div class="fw-semibold text-primary">Students</div>
+                        <small class="text-muted">Raise complaints, track every stage, confirm the fix.</small>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="border rounded-3 p-3 bg-light">
-                        <div class="fw-semibold text-warning">Technician</div>
-                        <small class="text-muted">View assignments, pause for parts, report repairs with checklist.</small>
+                <div class="col-md-3 col-6">
+                    <div class="border rounded-3 p-3 bg-light h-100">
+                        <div class="fw-semibold text-info">Staff</div>
+                        <small class="text-muted">Report issues, follow campus-wide progress.</small>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="border rounded-3 p-3 bg-light">
+                <div class="col-md-3 col-6">
+                    <div class="border rounded-3 p-3 bg-light h-100">
+                        <div class="fw-semibold text-warning">Workers</div>
+                        <small class="text-muted">Get jobs for your area, update progress, see earnings.</small>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="border rounded-3 p-3 bg-light h-100">
                         <div class="fw-semibold text-success">Admin</div>
-                        <small class="text-muted">Triage requests, assign technicians, monitor campus SLAs.</small>
+                        <small class="text-muted">Manage users &amp; access, assign work, pay workers.</small>
                     </div>
                 </div>
             </div>
@@ -48,15 +56,119 @@
                         <span class="badge bg-warning text-dark ms-1">Demo Mode Active</span>
                     {% endif %}
                 </div>
-                <div>
-                    {% if user.is_authenticated %}
-                        <span class="text-muted me-2">Welcome back, <strong>{{ user.username }}</strong>!</span>
-                    {% else %}
-                        <a href="{% url 'login' %}" class="btn btn-primary px-4 fw-semibold">Sign In to FixIt</a>
+                <div class="d-flex gap-2">
+                    {% if allow_signup %}
+                        <a href="{% url 'accounts:signup' %}" class="btn btn-outline-primary px-4 fw-semibold">Student sign up</a>
                     {% endif %}
+                    <a href="{% url 'login' %}" class="btn btn-primary px-4 fw-semibold">Sign In to FixIt</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% else %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h1 class="h3 page-title mb-1">Hello, {{ user.first_name|default:user.username }}</h1>
+        <p class="text-muted mb-0">{{ user.get_role_display }} account{% if user.department %} &middot; {{ user.department }}{% endif %}</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        {% if nav.submit %}<a href="{% url 'tickets:create' %}" class="btn btn-primary">+ Raise a complaint</a>{% endif %}
+        {% if nav.track %}
+        <form class="d-flex gap-1" method="get" action="{% url 'tickets:track' %}" role="search">
+            <input class="form-control" name="code" placeholder="FIX-00012" aria-label="Complaint number" style="max-width: 9.5rem">
+            <button class="btn btn-outline-secondary" type="submit">Track</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if reminders %}
+<div class="card mb-4 border-warning">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Reminders due</span>
+        <a class="small" href="{% url 'tickets:reminders' %}">Open reminders</a>
+    </div>
+    <ul class="list-group list-group-flush">
+        {% for r in reminders %}
+        <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+            <div>
+                <span class="badge text-bg-light border me-1">{{ r.get_kind_display }}</span>
+                {{ r.message }}
+                {% if r.ticket %}<a href="{{ r.ticket.get_absolute_url }}" class="small ms-1">{{ r.ticket.code }}</a>{% endif %}
+            </div>
+            <form method="post" action="{% url 'tickets:reminder_done' r.pk %}">
+                {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+                <button class="btn btn-sm btn-outline-success" type="submit">Done</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% if manage %}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Waiting for a worker</div><div class="value">{{ manage.unassigned }}</div><a class="hint" href="{% url 'tickets:list' %}?scope=unassigned">View list</a></div></div>
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Overdue (SLA missed)</div><div class="value {% if manage.overdue %}text-danger{% endif %}">{{ manage.overdue }}</div><a class="hint" href="{% url 'tickets:list' %}?scope=overdue">View list</a></div></div>
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Open safety issues</div><div class="value">{{ manage.safety }}</div><span class="hint">Flagged as dangerous</span></div></div>
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Quick links</div>
+        <div class="d-flex flex-wrap gap-1 mt-1">
+            {% if nav.dashboard %}<a class="btn btn-sm btn-outline-primary" href="{% url 'dashboard' %}">Dashboard</a>{% endif %}
+            {% if nav.admin %}<a class="btn btn-sm btn-outline-warning" href="{% url 'portal:users' %}">Users</a>{% endif %}
+            {% if nav.locator %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'worker_locator' %}">Workers</a>{% endif %}
+        </div>
+    </div></div>
+</div>
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between"><span>Needs action: review &amp; assign</span><a class="small" href="{% url 'tickets:list' %}?group=needs_action&sort=priority">See all</a></div>
+    {% include "partials/ticket_table.html" with tickets=manage.needs_action empty="Nothing waiting. Every complaint has a worker." %}
+</div>
+{% endif %}
+
+{% if jobs %}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Active jobs</div><div class="value">{{ jobs.active|length }}</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Awaiting confirmation</div><div class="value">{{ jobs.awaiting }}</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Confirmed this month</div><div class="value">{{ jobs.done_month }}</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-tile"><div class="label">Pending earnings</div><div class="value">{{ jobs.pending_pay|inr }}</div>{% if nav.payments %}<a class="hint" href="{% url 'payments:list' %}">View earnings</a>{% endif %}</div></div>
+</div>
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">My active jobs</div>
+            {% include "partials/ticket_table.html" with tickets=jobs.active empty="No active jobs right now." %}
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">My location &amp; availability</div>
+            <div class="card-body">
+                {% include "partials/location_form.html" with form=location_form %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if my %}
+<div class="row g-3 mb-4">
+    <div class="col-4"><div class="stat-tile"><div class="label">My open complaints</div><div class="value">{{ my.open }}</div></div></div>
+    <div class="col-4"><div class="stat-tile"><div class="label">Waiting for my confirmation</div><div class="value {% if my.awaiting %}text-warning{% endif %}">{{ my.awaiting|length }}</div></div></div>
+    <div class="col-4"><div class="stat-tile"><div class="label">Confirmed fixed</div><div class="value">{{ my.resolved }}</div></div></div>
+</div>
+{% if my.awaiting %}
+<div class="alert alert-warning">
+    <strong>Please check these repairs.</strong> A worker reported them fixed. Confirm if it works, or reopen if it doesn't:
+    {% for t in my.awaiting %}<a class="alert-link ms-1" href="{{ t.get_absolute_url }}">{{ t.code }}</a>{% if not forloop.last %},{% endif %}{% endfor %}
+</div>
+{% endif %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between"><span>My recent complaints</span><a class="small" href="{% url 'tickets:list' %}?scope=mine&group=all">See all</a></div>
+    {% include "partials/ticket_table.html" with tickets=my.recent empty="You have not raised any complaints yet." %}
+</div>
+{% endif %}
+
+{% endif %}
 {% endblock %}

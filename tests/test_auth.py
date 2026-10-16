@@ -12,13 +12,13 @@ def demo_users(db):
             username="test_requester",
             email="req@test.com",
             password=password,
-            role=User.Role.REQUESTER,
+            role=User.Role.STUDENT,
         ),
         "technician": User.objects.create_user(
             username="test_technician",
             email="tech@test.com",
             password=password,
-            role=User.Role.TECHNICIAN,
+            role=User.Role.WORKER,
         ),
         "admin": User.objects.create_user(
             username="test_admin",
@@ -62,3 +62,17 @@ def test_logout_requires_post(demo_users):
     post_resp = client.post("/accounts/logout/")
     assert post_resp.status_code in (302, 200)
     assert "_auth_user_id" not in client.session
+
+
+def test_login_with_email_address(demo_users):
+    users, password = demo_users
+    client = Client()
+    assert client.login(username="REQ@test.com", password=password) is True
+
+
+def test_deactivated_user_cannot_login(demo_users):
+    users, password = demo_users
+    user = users["technician"]
+    user.is_active = False
+    user.save()
+    assert Client().login(username=user.username, password=password) is False

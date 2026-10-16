@@ -1,6 +1,6 @@
 # 01. State Machine Specification
 
-The FixIt ticket lifecycle state machine is formally defined in [`docs/state_machine.yaml`](file:///c:/Users/MAHENDRA/Desktop/hackvision%20website/docs/state_machine.yaml).
+The FixIt ticket lifecycle state machine is formally defined in [`docs/state_machine.yaml`](state_machine.yaml).
 
 ## State Definitions
 

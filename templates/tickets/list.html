@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load fixit %}
+
+{% block title %}Complaints - FixIt{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 page-title mb-0">{% if nav.jobs_only %}My jobs{% elif can_see_all %}All complaints{% else %}My complaints{% endif %}</h1>
+    {% if nav.submit %}<a href="{% url 'tickets:create' %}" class="btn btn-primary">+ Raise a complaint</a>{% endif %}
+</div>
+
+<ul class="nav nav-pills flex-wrap gap-1 mb-3 small">
+    {% for key, label in groups %}
+    <li class="nav-item"><a class="nav-link py-1 px-3 {% if filters.group == key %}active{% endif %}" href="?{% query_replace group=key page=None %}">{{ label }}</a></li>
+    {% endfor %}
+</ul>
+
+<form method="get" class="card card-body mb-3 py-3">
+    <input type="hidden" name="group" value="{{ filters.group }}">
+    <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-3">
+            <label class="form-label small mb-1" for="f-q">Search</label>
+            <input id="f-q" class="form-control form-control-sm" name="q" value="{{ filters.q }}" placeholder="FIX-00012, title, room...">
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small mb-1" for="f-cat">Category</label>
+            <select id="f-cat" class="form-select form-select-sm" name="category">
+                <option value="">All</option>
+                {% for value, label in categories %}<option value="{{ value }}" {% if filters.category == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label small mb-1" for="f-bld">Building</label>
+            <select id="f-bld" class="form-select form-select-sm" name="building">
+                <option value="">All</option>
+                {% for b in buildings %}<option value="{{ b.pk }}" {% if filters.building == b.pk|stringformat:"s" %}selected{% endif %}>{{ b.name }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-4 col-md-1">
+            <label class="form-label small mb-1" for="f-band">Priority</label>
+            <select id="f-band" class="form-select form-select-sm" name="priority_band">
+                <option value="">All</option>
+                <option value="P1" {% if filters.priority_band == "P1" %}selected{% endif %}>P1</option>
+                <option value="P2" {% if filters.priority_band == "P2" %}selected{% endif %}>P2</option>
+                <option value="P3" {% if filters.priority_band == "P3" %}selected{% endif %}>P3</option>
+                <option value="P4" {% if filters.priority_band == "P4" %}selected{% endif %}>P4</option>
+            </select>
+        </div>
+        <div class="col-4 col-md-2">
+            <label class="form-label small mb-1" for="f-scope">Show</label>
+            <select id="f-scope" class="form-select form-select-sm" name="scope">
+                <option value="">Everything I can see</option>
+                {% if nav.submit %}<option value="mine" {% if filters.scope == "mine" %}selected{% endif %}>Raised by me</option>{% endif %}
+                {% if user|has_feature:"work_on_complaints" %}<option value="my_jobs" {% if filters.scope == "my_jobs" %}selected{% endif %}>Assigned to me</option>{% endif %}
+                {% if can_see_all %}<option value="unassigned" {% if filters.scope == "unassigned" %}selected{% endif %}>Not assigned</option>{% endif %}
+                <option value="overdue" {% if filters.scope == "overdue" %}selected{% endif %}>Overdue</option>
+            </select>
+        </div>
+        <div class="col-4 col-md-1">
+            <label class="form-label small mb-1" for="f-sort">Sort</label>
+            <select id="f-sort" class="form-select form-select-sm" name="sort">
+                <option value="newest" {% if filters.sort == "newest" %}selected{% endif %}>Newest</option>
+                <option value="oldest" {% if filters.sort == "oldest" %}selected{% endif %}>Oldest</option>
+                <option value="priority" {% if filters.sort == "priority" %}selected{% endif %}>Priority</option>
+                <option value="due" {% if filters.sort == "due" %}selected{% endif %}>Due soonest</option>
+            </select>
+        </div>
+        <div class="col-12 col-md-1 d-grid">
+            <button class="btn btn-sm btn-primary" type="submit">Filter</button>
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="card-header small text-muted fw-normal">{{ page.paginator.count }} complaint{{ page.paginator.count|pluralize }}</div>
+    {% include "partials/ticket_table.html" with tickets=tickets empty="No complaints match these filters." %}
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}

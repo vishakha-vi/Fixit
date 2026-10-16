@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load fixit %}
+
+{% block title %}Reminders - FixIt{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 page-title mb-0">Reminders</h1>
+    {% if tab == "due" and counts.due %}
+    <form method="post" action="{% url 'tickets:reminders_all_done' %}">
+        {% csrf_token %}
+        <button class="btn btn-sm btn-outline-success" type="submit">Mark all due as done</button>
+    </form>
+    {% endif %}
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item"><a class="nav-link {% if tab == 'due' %}active{% endif %}" href="?tab=due">Due now{% if counts.due %} <span class="badge rounded-pill text-bg-danger">{{ counts.due }}</span>{% endif %}</a></li>
+            <li class="nav-item"><a class="nav-link {% if tab == 'upcoming' %}active{% endif %}" href="?tab=upcoming">Upcoming{% if counts.upcoming %} <span class="badge rounded-pill text-bg-secondary">{{ counts.upcoming }}</span>{% endif %}</a></li>
+            <li class="nav-item"><a class="nav-link {% if tab == 'done' %}active{% endif %}" href="?tab=done">Done</a></li>
+            <li class="nav-item"><a class="nav-link {% if tab == 'sent' %}active{% endif %}" href="?tab=sent">Sent by me</a></li>
+        </ul>
+
+        <div class="card">
+            {% if items %}
+            <ul class="list-group list-group-flush">
+                {% for r in items %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div>
+                            <div class="small mb-1">
+                                <span class="badge {% if r.kind == 'sla_overdue' or r.kind == 'safety' %}text-bg-danger{% elif r.kind == 'sla_half' or r.kind == 'confirm_fix' or r.kind == 'unassigned' %}text-bg-warning text-dark{% elif r.kind == 'new_job' %}text-bg-primary{% else %}text-bg-light border{% endif %}">{{ r.get_kind_display }}</span>
+                                <span class="text-muted ms-1">{% if tab == "upcoming" %}due {{ r.due_at|date:"d M Y, H:i" }} ({{ r.due_at|timeago }}){% else %}{{ r.due_at|timeago }}{% endif %}</span>
+                                {% if tab == "sent" %}<span class="text-muted">&middot; to {{ r.recipient.display_name }}{% if r.is_done %} (done){% endif %}</span>
+                                {% elif r.created_by and r.created_by.pk != user.pk %}<span class="text-muted">&middot; from {{ r.created_by.display_name }}</span>{% endif %}
+                            </div>
+                            <div class="{% if r.is_done and tab != 'sent' %}text-decoration-line-through text-muted{% endif %}">{{ r.message }}</div>
+                            {% if r.ticket %}<a class="small" href="{{ r.ticket.get_absolute_url }}">{{ r.ticket.code }} &middot; {{ r.ticket.title }}</a>{% endif %}
+                        </div>
+                        <div class="d-flex gap-1 flex-shrink-0">
+                            {% if tab != "sent" %}
+                            <form method="post" action="{% url 'tickets:reminder_done' r.pk %}">
+                                {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button class="btn btn-sm {% if r.is_done %}btn-outline-secondary{% else %}btn-outline-success{% endif %}" type="submit">{% if r.is_done %}Undo{% else %}Done{% endif %}</button>
+                            </form>
+                            {% endif %}
+                            <form method="post" action="{% url 'tickets:reminder_delete' r.pk %}">
+                                {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete reminder">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state">
+                {% if tab == "due" %}You're all caught up. No reminders are due.{% elif tab == "upcoming" %}No upcoming reminders.{% elif tab == "sent" %}You have not sent any reminders.{% else %}Nothing here yet.{% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">Add a personal reminder</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% include "partials/form_errors.html" %}
+                    {% include "partials/field.html" with field=form.message %}
+                    {% include "partials/field.html" with field=form.remind_at %}
+                    <button class="btn btn-primary btn-sm" type="submit">Save reminder</button>
+                </form>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body small text-muted">
+                <p class="fw-semibold text-dark mb-2">Automatic reminders</p>
+                <ul class="ps-3 mb-0">
+                    <li>Workers are reminded when half the SLA time is used, and when a job is overdue.</li>
+                    <li>Admins are reminded about complaints waiting over 2 hours for a worker, and about overdue jobs.</li>
+                    <li>Requesters are reminded to confirm a fix after 24 hours. Unconfirmed fixes close automatically after 72 hours.</li>
+                    <li>Use <em>Send a reminder</em> on any complaint to nudge the worker, the requester or the admins.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

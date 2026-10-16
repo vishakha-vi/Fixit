@@ -1,0 +1,30 @@
+{% extends "portal/base_portal.html" %}
+{% load fixit %}
+
+{% block portal_head_title %}Delete {{ target.display_name }}{% endblock %}
+{% block portal_title %}Delete account{% endblock %}
+
+{% block portal_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card border-danger">
+            <div class="card-body p-4">
+                <h2 class="h5 fw-bold">Delete {{ target.display_name }} ({{ target.email|default:target.username }})?</h2>
+                <p class="text-secondary">This cannot be undone. The person will no longer be able to sign in.</p>
+                <ul class="small">
+                    <li>{{ impact.raised }} complaint{{ impact.raised|pluralize }} they raised will be kept and shown as raised by a deleted user.</li>
+                    {% if impact.assigned_open %}<li class="text-danger">{{ impact.assigned_open }} open job{{ impact.assigned_open|pluralize }} assigned to them will become unassigned. Reassign them afterwards.</li>{% endif %}
+                    {% if impact.payments_pending %}<li class="text-danger">{{ impact.payments_pending|inr }} of pending payments stay on record under their name.</li>{% endif %}
+                    <li>Their reminders will be deleted.</li>
+                </ul>
+                <p class="small text-muted">If they may come back, <strong>deactivate</strong> the account instead.</p>
+                <form method="post" class="d-flex flex-wrap gap-2">
+                    {% csrf_token %}
+                    <button class="btn btn-danger" type="submit">Yes, delete permanently</button>
+                    <a class="btn btn-outline-secondary" href="{% url 'portal:user_detail' target.pk %}">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

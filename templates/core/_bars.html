@@ -1,0 +1,19 @@
+<div class="col-md-6">
+    <div class="card h-100">
+        <div class="card-header">{{ title }}</div>
+        <div class="card-body">
+            {% if rows %}
+            <div class="hbar" role="list">
+                {% for r in rows %}
+                <div class="hbar-row" role="listitem" title="{{ r.label }}: {{ r.count }} complaint{{ r.count|pluralize }}">
+                    <span class="hbar-label">{{ r.label }}</span>
+                    <span class="hbar-track"><span class="hbar-fill" style="width: calc({{ r.width|stringformat:'s' }}% * 0.85)"></span><span class="hbar-value">{{ r.count }}</span></span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state py-3">No complaints in this period.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>

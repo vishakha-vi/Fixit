@@ -1,0 +1,42 @@
+<form method="post" action="{% url 'accounts:update_location' %}" class="location-form">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <div class="mb-2">
+        <label class="form-label small fw-semibold" for="{{ form.current_location.id_for_label }}">{{ form.current_location.label }}</label>
+        {{ form.current_location }}
+    </div>
+    <div class="mb-2">
+        <label class="form-label small fw-semibold" for="{{ form.availability.id_for_label }}">Availability</label>
+        {{ form.availability }}
+    </div>
+    {{ form.lat }}{{ form.lng }}
+    <div class="form-check mb-3">
+        <input class="form-check-input js-share-gps" type="checkbox" id="share-gps-{{ forloop.counter|default:'1' }}">
+        <label class="form-check-label small" for="share-gps-{{ forloop.counter|default:'1' }}">Also share my GPS position</label>
+        <div class="form-text js-gps-status"></div>
+    </div>
+    <button type="submit" class="btn btn-primary btn-sm w-100">Update my location</button>
+</form>
+<script>
+(function () {
+    var form = document.currentScript.previousElementSibling;
+    var box = form.querySelector(".js-share-gps");
+    var status = form.querySelector(".js-gps-status");
+    var lat = form.querySelector("input[name=lat]");
+    var lng = form.querySelector("input[name=lng]");
+    box.addEventListener("change", function () {
+        lat.value = ""; lng.value = "";
+        if (!box.checked) { status.textContent = ""; return; }
+        if (!navigator.geolocation) { status.textContent = "GPS is not available in this browser."; box.checked = false; return; }
+        status.textContent = "Getting your position...";
+        navigator.geolocation.getCurrentPosition(function (pos) {
+            lat.value = pos.coords.latitude.toFixed(6);
+            lng.value = pos.coords.longitude.toFixed(6);
+            status.textContent = "Position ready (±" + Math.round(pos.coords.accuracy) + " m).";
+        }, function (err) {
+            box.checked = false;
+            status.textContent = "Could not get GPS position: " + err.message;
+        }, { enableHighAccuracy: true, timeout: 10000 });
+    });
+})();
+</script>

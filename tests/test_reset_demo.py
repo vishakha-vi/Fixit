@@ -17,21 +17,38 @@ def test_reset_demo_refuses_without_yes_flag(settings):
         call_command("reset_demo")
 
 
-def test_reset_demo_creates_three_distinct_users(settings, db):
+def test_reset_demo_creates_demo_users_for_every_role(settings, db):
     settings.DEMO_MODE = True
 
     # Pre-clean or setup
     User.objects.all().delete()
 
-    call_command("reset_demo", "--yes")
+    call_command("reset_demo", "--yes", "--users-only")
 
     demo_users = list(User.objects.filter(username__in=[
-        "requester_demo", "technician_demo", "admin_demo"
+        "student_demo", "staff_demo", "worker_demo", "admin_demo"
     ]))
-    assert len(demo_users) == 3
+    assert len(demo_users) == 4
 
     roles = {u.role for u in demo_users}
-    assert roles == {User.Role.REQUESTER, User.Role.TECHNICIAN, User.Role.ADMIN}
+    assert roles == {User.Role.STUDENT, User.Role.STAFF, User.Role.WORKER, User.Role.ADMIN}
 
     for u in demo_users:
         assert u.check_password("DemoFixItPass123!") is True
+
+
+def test_reset_demo_seeds_sample_complaints(settings, db):
+    from apps.tickets.models import Ticket
+
+    settings.DEMO_MODE = True
+    call_command("reset_demo", "--yes")
+    assert Ticket.objects.count() > 30
+    assert Ticket.objects.filter(status=Ticket.Status.VERIFIED_FIXED).exists()
+    # demo clock is back to real time after seeding
+    from apps.core.models import DemoClock
+    assert DemoClock.objects.get(id=1).offset_seconds == 0.0
+
+    # --if-empty does nothing once complaints exist
+    before = Ticket.objects.count()
+    call_command("reset_demo", "--yes", "--if-empty")
+    assert Ticket.objects.count() == before
