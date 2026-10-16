@@ -1,0 +1,161 @@
+version: "1.0"
+description: "FixIt priority calculation and SLA rules"
+
+score_cap: 100
+
+components:
+  severity:
+    minor: 10
+    moderate: 25
+    major: 40
+    critical: 50
+
+  safety_flag:
+    score: 30
+    admin_acknowledgment_minutes: 30
+
+  additional_affected_people:
+    per_person: 5
+    max_bonus: 15
+
+  critical_location:
+    score: 10
+    locations:
+      - "medical room"
+      - "lab"
+      - "entrance"
+      - "mess"
+
+  recurrence_30_days:
+    score: 10
+
+  aging:
+    half_sla_elapsed: 10
+    overdue: 20
+    cumulative: false
+
+bands:
+  - id: "P1"
+    name: "Critical"
+    min_score: 75
+    max_score: 100
+    sla_hours: 4
+    description: "Emergency repairs requiring immediate dispatch."
+
+  - id: "P2"
+    name: "High"
+    min_score: 55
+    max_score: 74
+    sla_hours: 24
+    description: "Urgent issues affecting safety, multiple people, or key infrastructure."
+
+  - id: "P3"
+    name: "Medium"
+    min_score: 30
+    max_score: 54
+    sla_hours: 72
+    description: "Moderate operational repairs and routine breakdowns."
+
+  - id: "P4"
+    name: "Low"
+    min_score: 0
+    max_score: 29
+    sla_hours: 168
+    description: "Minor aesthetic or convenience maintenance."
+
+golden_examples:
+  - id: 1
+    description: "minor, no flags"
+    inputs:
+      severity: "minor"
+      safety_flag: false
+      additional_affected_people: 0
+      critical_location: false
+      recurrence: false
+      aging: "none"
+    expected_score: 10
+    expected_band: "P4"
+
+  - id: 2
+    description: "moderate, 2 extra affected"
+    inputs:
+      severity: "moderate"
+      safety_flag: false
+      additional_affected_people: 2
+      critical_location: false
+      recurrence: false
+      aging: "none"
+    expected_score: 35
+    expected_band: "P3"
+
+  - id: 3
+    description: "major + safety"
+    inputs:
+      severity: "major"
+      safety_flag: true
+      additional_affected_people: 0
+      critical_location: false
+      recurrence: false
+      aging: "none"
+    expected_score: 70
+    expected_band: "P2"
+
+  - id: 4
+    description: "critical + safety"
+    inputs:
+      severity: "critical"
+      safety_flag: true
+      additional_affected_people: 0
+      critical_location: false
+      recurrence: false
+      aging: "none"
+    expected_score: 80
+    expected_band: "P1"
+
+  - id: 5
+    description: "major + critical location + recurrence"
+    inputs:
+      severity: "major"
+      safety_flag: false
+      additional_affected_people: 0
+      critical_location: true
+      recurrence: true
+      aging: "none"
+    expected_score: 60
+    expected_band: "P2"
+
+  - id: 6
+    description: "moderate + critical location + overdue"
+    inputs:
+      severity: "moderate"
+      safety_flag: false
+      additional_affected_people: 0
+      critical_location: true
+      recurrence: false
+      aging: "overdue"
+    expected_score: 55
+    expected_band: "P2"
+
+  - id: 7
+    description: "minor + aging at 50% SLA"
+    inputs:
+      severity: "minor"
+      safety_flag: false
+      additional_affected_people: 0
+      critical_location: false
+      recurrence: false
+      aging: "half_sla"
+    expected_score: 20
+    expected_band: "P4"
+
+  - id: 8
+    description: "critical + safety + critical location + recurrence + 3 extra affected + overdue"
+    inputs:
+      severity: "critical"
+      safety_flag: true
+      additional_affected_people: 3
+      critical_location: true
+      recurrence: true
+      aging: "overdue"
+    expected_score: 100
+    expected_band: "P1"

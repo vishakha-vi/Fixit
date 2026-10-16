@@ -1,0 +1,224 @@
+version: "1.0"
+description: "FixIt ticket lifecycle state machine specification"
+
+states:
+  SUBMITTED:
+    sla_behavior: "running"
+    label: "Submitted"
+    color: "blue"
+    terminal: false
+    reopenable: false
+
+  TRIAGED:
+    sla_behavior: "running"
+    label: "Reviewed by admin"
+    color: "blue"
+    terminal: false
+    reopenable: false
+
+  ASSIGNED:
+    sla_behavior: "running"
+    label: "Assigned"
+    color: "blue"
+    terminal: false
+    reopenable: false
+
+  IN_PROGRESS:
+    sla_behavior: "running"
+    label: "In progress"
+    color: "blue"
+    terminal: false
+    reopenable: false
+
+  WAITING_PARTS:
+    sla_behavior: "paused"
+    label: "Waiting for parts"
+    color: "grey"
+    terminal: false
+    reopenable: false
+
+  WAITING_ACCESS:
+    sla_behavior: "paused"
+    label: "Waiting for access"
+    color: "grey"
+    terminal: false
+    reopenable: false
+
+  REPORTED_FIXED:
+    sla_behavior: "stopped"
+    label: "Technician reports fixed - awaiting your confirmation"
+    color: "amber"
+    terminal: false
+    reopenable: false
+
+  VERIFIED_FIXED:
+    sla_behavior: "stopped"
+    label: "Confirmed fixed"
+    color: "green"
+    terminal: true
+    reopenable: true
+    reopen_window_days: 7
+
+  REOPENED:
+    sla_behavior: "running"
+    label: "Reopened"
+    color: "red"
+    terminal: false
+    reopenable: false
+
+  CLOSED_UNVERIFIED:
+    sla_behavior: "stopped"
+    label: "Closed - not confirmed"
+    color: "grey"
+    terminal: true
+    reopenable: true
+    reopen_window_days: 7
+
+  CANCELLED:
+    sla_behavior: "stopped"
+    label: "Cancelled"
+    color: "grey"
+    terminal: true
+    reopenable: false
+
+  REJECTED:
+    sla_behavior: "stopped"
+    label: "Rejected"
+    color: "grey"
+    terminal: true
+    reopenable: false
+
+  MERGED:
+    sla_behavior: "stopped"
+    label: "Merged"
+    color: "grey"
+    terminal: true
+    reopenable: false
+
+transitions:
+  - from: "SUBMITTED"
+    to: "TRIAGED"
+    roles: ["admin"]
+    guards: []
+
+  - from: "SUBMITTED"
+    to: "ASSIGNED"
+    roles: ["admin"]
+    guards: ["technician active"]
+
+  - from: "TRIAGED"
+    to: "ASSIGNED"
+    roles: ["admin"]
+    guards: ["technician active"]
+
+  - from: "SUBMITTED"
+    to: "CANCELLED"
+    roles: ["requester", "admin"]
+    guards: ["requester is owner", "not allowed once IN_PROGRESS"]
+
+  - from: "TRIAGED"
+    to: "CANCELLED"
+    roles: ["requester", "admin"]
+    guards: ["requester is owner", "not allowed once IN_PROGRESS"]
+
+  - from: "ASSIGNED"
+    to: "CANCELLED"
+    roles: ["requester", "admin"]
+    guards: ["requester is owner", "not allowed once IN_PROGRESS"]
+
+  - from: "SUBMITTED"
+    to: "REJECTED"
+    roles: ["admin"]
+    guards: ["reason required"]
+
+  - from: "TRIAGED"
+    to: "REJECTED"
+    roles: ["admin"]
+    guards: ["reason required"]
+
+  - from: "SUBMITTED"
+    to: "MERGED"
+    roles: ["admin"]
+    guards: ["target request required"]
+
+  - from: "TRIAGED"
+    to: "MERGED"
+    roles: ["admin"]
+    guards: ["target request required"]
+
+  - from: "ASSIGNED"
+    to: "IN_PROGRESS"
+    roles: ["technician", "admin"]
+    guards: ["technician is assigned"]
+
+  - from: "REOPENED"
+    to: "IN_PROGRESS"
+    roles: ["technician", "admin"]
+    guards: ["technician is assigned"]
+
+  - from: "IN_PROGRESS"
+    to: "WAITING_PARTS"
+    roles: ["technician", "admin"]
+    guards: ["technician is assigned", "reason required"]
+
+  - from: "IN_PROGRESS"
+    to: "WAITING_ACCESS"
+    roles: ["technician", "admin"]
+    guards: ["technician is assigned", "reason required", "attempt counter"]
+
+  - from: "WAITING_PARTS"
+    to: "IN_PROGRESS"
+    roles: ["technician", "admin"]
+    guards: ["technician is assigned"]
+
+  - from: "WAITING_ACCESS"
+    to: "IN_PROGRESS"
+    roles: ["technician", "admin"]
+    guards: ["technician is assigned"]
+
+  - from: "IN_PROGRESS"
+    to: "REPORTED_FIXED"
+    roles: ["technician", "admin"]
+    guards: ["technician is assigned", "checklist complete", "after-photo if category requires it"]
+
+  - from: "REPORTED_FIXED"
+    to: "VERIFIED_FIXED"
+    roles: ["requester", "technician"]
+    guards:
+      - "requester is owner or affected reporter; OR technician is assigned with valid completion code (method = on_site_code)"
+
+  - from: "REPORTED_FIXED"
+    to: "REOPENED"
+    roles: ["requester", "admin"]
+    guards: ["requester is owner or affected reporter", "reason required", "within reopen window"]
+
+  - from: "VERIFIED_FIXED"
+    to: "REOPENED"
+    roles: ["requester", "admin"]
+    guards: ["requester is owner or affected reporter", "reason required", "within reopen window"]
+
+  - from: "CLOSED_UNVERIFIED"
+    to: "REOPENED"
+    roles: ["requester", "admin"]
+    guards: ["requester is owner or affected reporter", "reason required", "within reopen window"]
+
+  - from: "REPORTED_FIXED"
+    to: "CLOSED_UNVERIFIED"
+    roles: ["system"]
+    guards: ["after 72h without a response"]
+
+  - from: "REOPENED"
+    to: "ASSIGNED"
+    roles: ["admin"]
+    guards: []
+
+events:
+  reassign:
+    roles: ["admin"]
+    allowed_in_states:
+      - "ASSIGNED"
+      - "IN_PROGRESS"
+      - "WAITING_PARTS"
+      - "WAITING_ACCESS"
+      - "REOPENED"
+    notes: "Reassignment is an event, not a state change; preserves full assignment and audit history."
