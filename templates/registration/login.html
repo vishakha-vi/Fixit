@@ -38,7 +38,7 @@
             <p class="text-center small mt-3 mb-0">Student without an account? <a href="{% url 'accounts:signup' %}">Sign up here</a>. Staff and worker accounts are created by the admin.</p>
             {% endif %}
 
-            {% if demo_mode %}
+            {% if demo_mode and demo_show_credentials %}
             <div class="mt-4 pt-3 border-top text-center text-muted small">
                 <p class="mb-1 fw-semibold text-secondary">Demo accounts (password <code>DemoFixItPass123!</code>):</p>
                 <code>admin_demo</code> &bull; <code>staff_demo</code> &bull; <code>student_demo</code> &bull; <code>worker_demo</code>

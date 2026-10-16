@@ -15,6 +15,7 @@ def fixit(request):
         "version": getattr(settings, "APP_VERSION", "0.1.0"),
         "demo_mode": getattr(settings, "DEMO_MODE", False),
         "allow_signup": getattr(settings, "ALLOW_STUDENT_SIGNUP", True),
+        "demo_show_credentials": getattr(settings, "DEMO_SHOW_CREDENTIALS", False),
     }
     if context["demo_mode"]:
         try:

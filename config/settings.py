@@ -149,8 +149,10 @@ else:
 # Security settings in production
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    CSRF_COOKIE_SECURE = True
-    SESSION_COOKIE_SECURE = True
+    # SECURE_COOKIES=False only for plain-http local use of a production build
+    _secure_cookies = os.environ.get("SECURE_COOKIES", "True").lower() in ("true", "1", "t", "yes")
+    CSRF_COOKIE_SECURE = _secure_cookies
+    SESSION_COOKIE_SECURE = _secure_cookies
     # Allow controlling redirect via env for local production-simulation or proxy testing
     if os.environ.get("SECURE_SSL_REDIRECT", "True").lower() in ("true", "1", "t", "yes"):
         SECURE_SSL_REDIRECT = True
@@ -179,4 +181,8 @@ ALLOW_STUDENT_SIGNUP = os.environ.get("ALLOW_STUDENT_SIGNUP", "True").lower() in
 
 # Demo mode & Versioning
 DEMO_MODE = os.environ.get("DEMO_MODE", "False").lower() in ("true", "1", "t", "yes")
+# Print demo usernames + password on the sign-in page (never on public sites by default)
+DEMO_SHOW_CREDENTIALS = os.environ.get(
+    "DEMO_SHOW_CREDENTIALS", "True" if DEBUG else "False"
+).lower() in ("true", "1", "t", "yes")
 APP_VERSION = os.environ.get("APP_VERSION", "1.0.0-mvp")

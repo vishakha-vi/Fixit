@@ -31,8 +31,9 @@ services:
       # True loads a demo campus with sample complaints on the first deploy
       - key: DEMO_MODE
         value: "True"
+      # Random password for demo accounts (see it in the Render dashboard); never public
       - key: DEMO_PASSWORD
-        value: "DemoFixItPass123!"
+        generateValue: true
       - key: APP_VERSION
         value: "1.0.0-render"
 
