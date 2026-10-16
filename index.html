@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FixIt — Campus & Residential Maintenance Platform</title>
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --bg-card: rgba(18, 24, 38, 0.85);
+            --bg-card-hover: rgba(26, 34, 52, 0.95);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-focus: #3b82f6;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-amber: #f59e0b;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --glow-green: 0 0 20px rgba(16, 185, 129, 0.35);
+            --glow-amber: 0 0 20px rgba(245, 158, 11, 0.35);
+            --glow-blue: 0 0 20px rgba(59, 130, 246, 0.35);
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Top Navigation Bar */
+        .navbar {
+            background: rgba(9, 13, 22, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-subtle);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 0.85rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .brand-icon {
+            background: linear-gradient(135deg, #3b82f6, #06b6d4);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: var(--glow-blue);
+        }
+
+        .brand-title {
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-tag {
+            font-size: 0.7rem;
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        /* Simulated Clock Pill */
+        .clock-pill {
+            background: rgba(18, 24, 38, 0.9);
+            border: 1px solid var(--border-subtle);
+            border-radius: 9999px;
+            padding: 0.35rem 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        .clock-time {
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            color: #38bdf8;
+            letter-spacing: 0.5px;
+        }
+
+        .clock-btn-group {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .btn-clock {
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            padding: 0.2rem 0.45rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-clock:hover {
+            background: var(--accent-blue);
+            color: #ffffff;
+        }
+
+        /* Role Switcher */
+        .role-switcher {
+            display: flex;
+            background: rgba(18, 24, 38, 0.9);
+            border: 1px solid var(--border-subtle);
+            padding: 0.25rem;
+            border-radius: 9999px;
+        }
+
+        .role-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .role-btn.active {
+            background: var(--accent-blue);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1380px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1.5rem 1.5rem 3rem;
+            flex-grow: 1;
+        }
+
+        /* Thesis Banner */
+        .thesis-banner {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-left: 4px solid var(--accent-cyan);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .thesis-text {
+            font-size: 0.95rem;
+            color: #cbd5e1;
+        }
+
+        .thesis-text strong {
+            color: #38bdf8;
+        }
+
+        .backend-link-btn {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            text-decoration: none;
+            padding: 0.5rem 1.1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .backend-link-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.1rem 1.25rem;
+            transition: transform 0.2s, border-color 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .metric-card.blue::before { background: var(--accent-blue); }
+        .metric-card.amber::before { background: var(--accent-amber); box-shadow: var(--glow-amber); }
+        .metric-card.green::before { background: var(--accent-green); box-shadow: var(--glow-green); }
+        .metric-card.purple::before { background: var(--accent-purple); }
+
+        .metric-label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.35rem;
+        }
+
+        .metric-value-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+        }
+
+        .metric-value {
+            font-size: 1.85rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .metric-value.amber { color: var(--accent-amber); }
+        .metric-value.green { color: var(--accent-green); }
+
+        .metric-subtext {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* View Navigation Tabs */
+        .tabs-header {
+            display: flex;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 1.5rem;
+            gap: 0.5rem;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.75rem 1.25rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-cyan);
+            border-bottom-color: var(--accent-cyan);
+        }
+
+        /* Tab Content Sections */
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+            animation: fadeIn 0.25s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Kanban Layout */
+        .kanban-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .kanban-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 640px) {
+            .kanban-grid { grid-template-columns: 1fr; }
+        }
+
+        .kanban-col {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1rem;
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kanban-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .kanban-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge-count {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            font-size: 0.72rem;
+            padding: 0.1rem 0.45rem;
+            border-radius: 9999px;
+            font-weight: 600;
+        }
+
+        /* Ticket Cards */
+        .ticket-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            flex-grow: 1;
+        }
+
+        .ticket-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .ticket-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .ticket-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .ticket-id {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .band-badge {
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .band-P1 { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .band-P2 { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+        .band-P3 { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+        .band-P4 { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.4); }
+
+        .ticket-title {
+            font-size: 0.92rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            line-height: 1.35;
+        }
+
+        .ticket-location {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .ticket-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 0.6rem;
+            font-size: 0.75rem;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.2rem 0.55rem;
+            border-radius: 9999px;
+        }
+
+        /* Status Colors per Specification */
+        .status-pill.blue {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .status-pill.amber {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            animation: pulseAmber 2s infinite;
+        }
+
+        .status-pill.green {
+            background: rgba(16, 185, 129, 0.18);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+        }
+
+        .status-pill.grey {
+            background: rgba(148, 163, 184, 0.12);
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        @keyframes pulseAmber {
+            0%, 100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
+            50% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.35); }
+        }
+
+        /* Verification Action Bar in Amber cards */
+        .verify-action-box {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px dashed rgba(245, 158, 11, 0.3);
+            border-radius: 6px;
+            padding: 0.5rem;
+            margin-top: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .btn-confirm-fix {
+            background: var(--accent-green);
+            color: #000;
+            border: none;
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-confirm-fix:hover {
+            transform: scale(1.03);
+            box-shadow: var(--glow-green);
+        }
+
+        /* Two-Column Form Layout */
+        .form-layout {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .form-layout { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.35rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            background: rgba(9, 13, 22, 0.8);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+            padding: 0.65rem 0.85rem;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .form-textarea {
+            min-height: 85px;
+            resize: vertical;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            cursor: pointer;
+            padding: 0.6rem 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .checkbox-group input {
+            accent-color: var(--accent-red);
+            width: 17px;
+            height: 17px;
+        }
+
+        /* Live Score Meter Widget */
+        .score-widget {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 6px solid #3b82f6;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .score-num {
+            font-size: 2.25rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .score-max {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .score-band-pill {
+            display: inline-block;
+            font-size: 1rem;
+            font-weight: 800;
+            padding: 0.35rem 1.25rem;
+            border-radius: 9999px;
+            margin-bottom: 0.75rem;
+        }
+
+        .score-sla-info {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.25rem;
+        }
+
+        .score-sla-info strong {
+            color: #ffffff;
+        }
+
+        .score-breakdown {
+            text-align: left;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 1rem;
+            font-size: 0.8rem;
+        }
+
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.4rem;
+            color: var(--text-secondary);
+        }
+
+        .breakdown-row.total {
+            font-weight: 700;
+            color: var(--text-primary);
+            border-top: 1px dashed rgba(255, 255, 255, 0.15);
+            padding-top: 0.4rem;
+            margin-top: 0.4rem;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #ffffff;
+            border: none;
+            width: 100%;
+            padding: 0.85rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            margin-top: 1.25rem;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+        }
+
+        /* Modal Dialog */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            max-width: 580px;
+            width: 100%;
+            padding: 1.75rem;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+
+        /* Confetti Notification Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #064e3b;
+            border: 1px solid #10b981;
+            color: #ecfdf5;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 300;
+        }
+
+        .toast.show {
+            display: flex;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Footer */
+        .footer {
+            border-top: 1px solid var(--border-subtle);
+            padding: 1.5rem 2rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <a href="#" class="nav-brand">
+            <div class="brand-icon">🔧</div>
+            <div>
+                <span class="brand-title">FixIt</span>
+                <span class="brand-tag">Phase 0 &bull; Ready</span>
+            </div>
+        </a>
+
+        <!-- Simulated Clock Controls -->
+        <div class="clock-pill">
+            <span>⏱️ Simulated Clock:</span>
+            <span class="clock-time" id="simulatedClock">2026-10-16 16:32</span>
+            <div class="clock-btn-group">
+                <button class="btn-clock" onclick="advanceClock(1)" title="Advance 1 Hour">+1h</button>
+                <button class="btn-clock" onclick="advanceClock(4)" title="Advance 4 Hours">+4h</button>
+                <button class="btn-clock" onclick="advanceClock(24)" title="Advance 24 Hours">+24h</button>
+                <button class="btn-clock" onclick="resetClock()" title="Reset Clock">↺ Reset</button>
+            </div>
+        </div>
+
+        <!-- Role Simulator -->
+        <div class="nav-controls">
+            <div class="role-switcher">
+                <button class="role-btn active" id="roleRequester" onclick="setRole('requester')">Requester</button>
+                <button class="role-btn" id="roleTechnician" onclick="setRole('technician')">Technician</button>
+                <button class="role-btn" id="roleAdmin" onclick="setRole('admin')">Admin</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="main-container">
+
+        <!-- Thesis & Live Status Banner -->
+        <section class="thesis-banner">
+            <div class="thesis-text">
+                <strong>Core FixIt Invariant:</strong> "FixIt measures whether things actually got fixed, not whether tickets got closed."
+                <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem;">
+                    Technicians mark tasks <span style="color: #fbbf24; font-weight: 600;">Reported Fixed (Amber)</span>. Only resident confirmation turns the status <span style="color: #34d399; font-weight: 600;">Verified Fixed (Green)</span>.
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <a href="http://127.0.0.1:8000/" target="_blank" class="backend-link-btn" title="Open Django Dev Server">
+                    🚀 Launch Django Server (Port 8000)
+                </a>
+                <a href="http://127.0.0.1:8000/healthz" target="_blank" style="color: var(--text-secondary); font-size: 0.8rem; text-decoration: none;">
+                    /healthz API
+                </a>
+            </div>
+        </section>
+
+        <!-- Metrics Overview -->
+        <section class="metrics-grid">
+            <div class="metric-card blue">
+                <div class="metric-label">Active Requests</div>
+                <div class="metric-value-row">
+                    <span class="metric-value" id="metricTotal">8</span>
+                    <span class="metric-subtext">3 P1 Emergencies</span>
+                </div>
+            </div>
+            <div class="metric-card amber">
+                <div class="metric-label">Awaiting Resident Confirmation</div>
+                <div class="metric-value-row">
+                    <span class="metric-value amber" id="metricAmber">2</span>
+                    <span class="metric-subtext">Reported Fixed</span>
+                </div>
+            </div>
+            <div class="metric-card green">
+                <div class="metric-label">Resident Verified Fixed</div>
+                <div class="metric-value-row">
+                    <span class="metric-value green" id="metricGreen">14</span>
+                    <span class="metric-subtext">100% Genuine Repairs</span>
+                </div>
+            </div>
+            <div class="metric-card purple">
+                <div class="metric-label">Campus SLA Adherence</div>
+                <div class="metric-value-row">
+                    <span class="metric-value">96.4%</span>
+                    <span class="metric-subtext">Avg 3.2h response</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab Navigation -->
+        <nav class="tabs-header">
+            <button class="tab-btn active" onclick="switchTab('board')">📋 Live Ticket Board</button>
+            <button class="tab-btn" onclick="switchTab('submit')">➕ Submit Request & Priority Meter</button>
+            <button class="tab-btn" onclick="switchTab('verify')">🔑 Completion Code Verification</button>
+            <button class="tab-btn" onclick="switchTab('specs')">📖 Architecture Specs & Invariants</button>
+        </nav>
+
+        <!-- Tab 1: Live Ticket Board -->
+        <section class="tab-pane active" id="tab-board">
+            <div class="kanban-grid">
+
+                <!-- Column 1: Submitted & Triage -->
+                <div class="kanban-col">
+                    <div class="kanban-header">
+                        <span class="kanban-title" style="color: #60a5fa;">📥 Submitted & Triage</span>
+                        <span class="badge-count" id="count-submitted">2</span>
+                    </div>
+                    <div class="ticket-list" id="col-submitted"></div>
+                </div>
+
+                <!-- Column 2: In Progress -->
+                <div class="kanban-col">
+                    <div class="kanban-header">
+                        <span class="kanban-title" style="color: #38bdf8;">⚡ In Progress</span>
+                        <span class="badge-count" id="count-progress">2</span>
+                    </div>
+                    <div class="ticket-list" id="col-progress"></div>
+                </div>
+
+                <!-- Column 3: Reported Fixed (Amber) -->
+                <div class="kanban-col" style="border-color: rgba(245, 158, 11, 0.3);">
+                    <div class="kanban-header">
+                        <span class="kanban-title" style="color: #fbbf24;">⚠️ Reported Fixed</span>
+                        <span class="badge-count" id="count-reported" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;">2</span>
+                    </div>
+                    <div class="ticket-list" id="col-reported"></div>
+                </div>
+
+                <!-- Column 4: Verified Fixed (Green) -->
+                <div class="kanban-col" style="border-color: rgba(16, 185, 129, 0.3);">
+                    <div class="kanban-header">
+                        <span class="kanban-title" style="color: #34d399;">✅ Verified Fixed</span>
+                        <span class="badge-count" id="count-verified" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">2</span>
+                    </div>
+                    <div class="ticket-list" id="col-verified"></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Tab 2: Submit Request & Priority Meter -->
+        <section class="tab-pane" id="tab-submit">
+            <div class="form-layout">
+                <div class="panel">
+                    <h2 class="panel-title">📝 New Maintenance Request</h2>
+                    <form id="newRequestForm" onsubmit="handleNewTicket(event)">
+                        <div class="form-group">
+                            <label class="form-label">Issue Title</label>
+                            <input type="text" class="form-input" id="reqTitle" placeholder="e.g. Water leak near electrical socket in corridor" required>
+                        </div>
+
+                        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <label class="form-label">Campus Facility</label>
+                                <select class="form-select" id="reqBuilding" onchange="updateScorePreview()">
+                                    <option value="Hostel Block A">Hostel Block A (Dormitory)</option>
+                                    <option value="Hostel Block B">Hostel Block B (Dormitory)</option>
+                                    <option value="Main Academic Complex">Main Academic Complex</option>
+                                    <option value="Central Campus Mess" data-critical="true">Central Campus Mess ⚠️</option>
+                                    <option value="Campus Health Center" data-critical="true">Campus Health Center ⚠️</option>
+                                    <option value="Central Laboratories" data-critical="true">Central Laboratories ⚠️</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Room or Space</label>
+                                <input type="text" class="form-input" id="reqRoom" placeholder="Room 204 or Ground Mess Hall" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <label class="form-label">Category</label>
+                                <select class="form-select" id="reqCategory">
+                                    <option value="Plumbing">Plumbing</option>
+                                    <option value="Electrical">Electrical</option>
+                                    <option value="HVAC / Cooling">HVAC / Cooling</option>
+                                    <option value="Carpentry">Carpentry & Locks</option>
+                                    <option value="Masonry">Civil / Masonry</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Severity Level</label>
+                                <select class="form-select" id="reqSeverity" onchange="updateScorePreview()">
+                                    <option value="minor">Minor (Aesthetic / minor nuisance)</option>
+                                    <option value="moderate" selected>Moderate (Normal breakdown)</option>
+                                    <option value="major">Major (Core fixture non-operational)</option>
+                                    <option value="critical">Critical (Severe hazard / structural)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <label class="checkbox-group">
+                                <input type="checkbox" id="reqSafety" onchange="updateScorePreview()">
+                                <span style="font-size: 0.85rem; font-weight: 600; color: #f87171;">⚠️ Immediate Safety Hazard (+30)</span>
+                            </label>
+                            <div>
+                                <label class="form-label">Extra Residents Affected (+5 each)</label>
+                                <input type="number" class="form-input" id="reqExtraPeople" min="0" max="10" value="0" oninput="updateScorePreview()">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Detailed Description & Symptoms</label>
+                            <textarea class="form-textarea" id="reqDesc" placeholder="Describe the problem, when it started, and any immediate actions taken..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-submit">Dispatch Maintenance Request</button>
+                    </form>
+                </div>
+
+                <!-- Live Priority Calculator Widget -->
+                <div class="score-widget">
+                    <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: #94a3b8;">Deterministic Priority Engine</h3>
+                    <div class="score-circle" id="scoreCircle">
+                        <span class="score-num" id="calcScoreVal">25</span>
+                        <span class="score-max">/ 100</span>
+                    </div>
+                    <div class="score-band-pill band-P3" id="calcBandPill">P3 &bull; MEDIUM</div>
+                    <div class="score-sla-info">
+                        Target Resolution SLA: <strong id="calcSlaVal">72 Hours</strong>
+                    </div>
+
+                    <div class="score-breakdown">
+                        <div class="breakdown-row">
+                            <span>Base Severity Weight:</span>
+                            <span id="ptsSeverity">+25</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span>Safety Hazard Bonus:</span>
+                            <span id="ptsSafety">+0</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span>Affected Residents:</span>
+                            <span id="ptsAffected">+0</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span>Critical Location Bonus:</span>
+                            <span id="ptsLocation">+0</span>
+                        </div>
+                        <div class="breakdown-row total">
+                            <span>Composite Score:</span>
+                            <span id="ptsTotal">25 / 100</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 3: Completion Code Verification -->
+        <section class="tab-pane" id="tab-verify">
+            <div style="max-width: 640px; margin: 0 auto;" class="panel">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <span style="font-size: 2.5rem;">🔐</span>
+                    <h2 class="panel-title" style="justify-content: center; margin-bottom: 0.35rem;">Resident On-Site Verification</h2>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                        Technicians cannot verify their own work. They must receive this 6-digit confirmation code directly from the resident on-site.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Select Ticket Awaiting Confirmation</label>
+                    <select class="form-select" id="verifySelectTicket" onchange="loadTicketVerificationDetails()"></select>
+                </div>
+
+                <div id="verifyDetailsBox" style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
+                    <div style="font-size: 0.85rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-secondary);">Requester:</span>
+                        <strong id="vReqUser">rita_student (Room 302)</strong>
+                    </div>
+                    <div style="font-size: 0.85rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-secondary);">Technician:</span>
+                        <strong id="vTechUser">Tom Technician</strong>
+                    </div>
+                    <div style="font-size: 0.85rem; display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-secondary);">Required Code:</span>
+                        <code style="font-size: 1.1rem; color: #38bdf8; font-weight: 700;" id="vTargetCode">849201</code>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Enter 6-Digit Verification Code</label>
+                    <input type="text" class="form-input" id="inputVerifyCode" maxlength="6" placeholder="Enter code (e.g. 849201)" style="font-size: 1.2rem; letter-spacing: 4px; text-align: center; font-weight: 700;">
+                </div>
+
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn-submit" style="margin-top: 0; background: var(--accent-green); color: #000;" onclick="submitCodeVerification()">
+                        ✅ Verify Repair & Close Ticket
+                    </button>
+                    <button class="btn-submit" style="margin-top: 0; background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4);" onclick="reopenTicketAction()">
+                        ❌ Issue Persists (Reopen)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 4: Architecture Specifications -->
+        <section class="tab-pane" id="tab-specs">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div class="panel">
+                    <h3 class="panel-title">🛡️ FixIt Invariants & Security Matrix</h3>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.88rem;">
+                        <li style="display: flex; gap: 0.5rem;">
+                            <span>🟢</span>
+                            <div>
+                                <strong>Single Green State:</strong> Only <code>VERIFIED_FIXED</code> is colored Green. <code>REPORTED_FIXED</code> is Amber.
+                            </div>
+                        </li>
+                        <li style="display: flex; gap: 0.5rem;">
+                            <span>⏱️</span>
+                            <div>
+                                <strong>Sole Time Authority:</strong> All timestamps governed by <code>apps.core.clock.now()</code>. Direct <code>datetime.now()</code> banned by static scan.
+                            </div>
+                        </li>
+                        <li style="display: flex; gap: 0.5rem;">
+                            <span>🔒</span>
+                            <div>
+                                <strong>IDOR Anti-Enumeration:</strong> Unauthorized requests to other residents' tickets return <code>404 Not Found</code>, never <code>403</code>.
+                            </div>
+                        </li>
+                        <li style="display: flex; gap: 0.5rem;">
+                            <span>📦</span>
+                            <div>
+                                <strong>Offline Independence:</strong> WhiteNoise serves locally vendored Bootstrap 5 & HTMX. Zero CDN downtime vulnerabilities.
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="panel">
+                    <h3 class="panel-title">📊 Priority Bands & SLAs</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted); text-align: left;">
+                                <th style="padding: 0.4rem 0;">Band</th>
+                                <th style="padding: 0.4rem 0;">Score</th>
+                                <th style="padding: 0.4rem 0;">Resolution SLA</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+                                <td style="padding: 0.5rem 0;"><span class="band-badge band-P1">P1 Critical</span></td>
+                                <td>75 – 100</td>
+                                <td style="color: #f87171; font-weight: 700;">4 Hours</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+                                <td style="padding: 0.5rem 0;"><span class="band-badge band-P2">P2 High</span></td>
+                                <td>55 – 74</td>
+                                <td style="color: #fbbf24; font-weight: 700;">24 Hours</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+                                <td style="padding: 0.5rem 0;"><span class="band-badge band-P3">P3 Medium</span></td>
+                                <td>30 – 54</td>
+                                <td style="color: #60a5fa; font-weight: 700;">72 Hours</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.5rem 0;"><span class="band-badge band-P4">P4 Low</span></td>
+                                <td>0 – 29</td>
+                                <td style="color: #94a3b8; font-weight: 700;">7 Days (168h)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Ticket Detail Modal -->
+    <div class="modal-overlay" id="ticketModal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toastNotice">
+        <span style="font-size: 1.5rem;">🎉</span>
+        <div>
+            <div style="font-weight: 700;" id="toastTitle">Ticket Verified Fixed!</div>
+            <div style="font-size: 0.8rem; opacity: 0.9;" id="toastMsg">Resident confirmation verified successfully.</div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        FixIt Maintenance Platform &bull; Built with Django 5.2, HTMX & Bootstrap 5 &bull; <a href="http://127.0.0.1:8000/" target="_blank" style="color: #38bdf8; text-decoration: none;">Django Dev Server: http://127.0.0.1:8000</a>
+    </footer>
+
+    <!-- Interactive Client Script -->
+    <script>
+        // State Store
+        let currentRole = 'requester';
+        let simulatedTime = new Date('2026-10-16T16:32:00');
+
+        let tickets = [
+            {
+                id: 'FIX-101',
+                title: 'Flooding in 2nd Floor Chemistry Laboratory',
+                facility: 'Central Laboratories',
+                room: 'Lab 204',
+                category: 'Plumbing',
+                severity: 'critical',
+                safety: true,
+                score: 90,
+                band: 'P1',
+                slaHours: 4,
+                status: 'IN_PROGRESS',
+                statusColor: 'blue',
+                statusLabel: 'In Progress',
+                requester: 'Dr. Sharma',
+                technician: 'Tom Technician',
+                code: '719342',
+                created: '2026-10-16 14:10'
+            },
+            {
+                id: 'FIX-102',
+                title: 'Main Dining Hall Dishwasher Power Surge',
+                facility: 'Central Campus Mess',
+                room: 'Dish Area',
+                category: 'Electrical',
+                severity: 'major',
+                safety: true,
+                score: 80,
+                band: 'P1',
+                slaHours: 4,
+                status: 'SUBMITTED',
+                statusColor: 'blue',
+                statusLabel: 'Submitted',
+                requester: 'Mess Manager',
+                technician: null,
+                code: '458129',
+                created: '2026-10-16 15:45'
+            },
+            {
+                id: 'FIX-103',
+                title: 'Corridor Light Flicker Block A 3rd Floor',
+                facility: 'Hostel Block A',
+                room: 'Wing 3 Corridor',
+                category: 'Electrical',
+                severity: 'moderate',
+                safety: false,
+                score: 35,
+                band: 'P3',
+                slaHours: 72,
+                status: 'REPORTED_FIXED',
+                statusColor: 'amber',
+                statusLabel: 'Reported Fixed (Awaiting Resident)',
+                requester: 'rita_student',
+                technician: 'Tom Technician',
+                code: '849201',
+                created: '2026-10-15 09:20'
+            },
+            {
+                id: 'FIX-104',
+                title: 'Clinic Water Dispenser Pressure Low',
+                facility: 'Campus Health Center',
+                room: 'Waiting Room',
+                category: 'Plumbing',
+                severity: 'minor',
+                safety: false,
+                score: 20,
+                band: 'P4',
+                slaHours: 168,
+                status: 'REPORTED_FIXED',
+                statusColor: 'amber',
+                statusLabel: 'Reported Fixed (Awaiting Resident)',
+                requester: 'Nurse Joy',
+                technician: 'Ramesh Tech',
+                code: '631245',
+                created: '2026-10-15 11:30'
+            },
+            {
+                id: 'FIX-105',
+                title: 'Dorm Room 108 Window Latch Replacement',
+                facility: 'Hostel Block B',
+                room: 'Room 108',
+                category: 'Carpentry',
+                severity: 'minor',
+                safety: false,
+                score: 10,
+                band: 'P4',
+                slaHours: 168,
+                status: 'VERIFIED_FIXED',
+                statusColor: 'green',
+                statusLabel: 'Confirmed Fixed (Code #938102)',
+                requester: 'Amit Student',
+                technician: 'Tom Technician',
+                code: '938102',
+                created: '2026-10-14 10:00'
+            },
+            {
+                id: 'FIX-106',
+                title: 'Academic Block 4th Floor AC Vent Cleaning',
+                facility: 'Main Academic Complex',
+                room: 'Lecture Hall 401',
+                category: 'HVAC / Cooling',
+                severity: 'moderate',
+                safety: false,
+                score: 25,
+                band: 'P3',
+                slaHours: 72,
+                status: 'VERIFIED_FIXED',
+                statusColor: 'green',
+                statusLabel: 'Confirmed Fixed (Code #112940)',
+                requester: 'Prof. Rao',
+                technician: 'Sanjay AC Team',
+                code: '112940',
+                created: '2026-10-13 14:00'
+            }
+        ];
+
+        // Format Date Helper
+        function formatClock(date) {
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
+        // Advance Clock
+        function advanceClock(hours) {
+            simulatedTime.setHours(simulatedTime.getHours() + hours);
+            document.getElementById('simulatedClock').textContent = formatClock(simulatedTime);
+            showToast('Clock Advanced', `Simulated time is now ${formatClock(simulatedTime)}`);
+        }
+
+        // Reset Clock
+        function resetClock() {
+            simulatedTime = new Date('2026-10-16T16:32:00');
+            document.getElementById('simulatedClock').textContent = formatClock(simulatedTime);
+            showToast('Clock Reset', 'Simulated demo clock returned to baseline.');
+        }
+
+        // Role Switcher
+        function setRole(role) {
+            currentRole = role;
+            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('role' + role.charAt(0).toUpperCase() + role.slice(1)).classList.add('active');
+            renderBoard();
+            showToast('Role Switched', `Now operating as: ${role.toUpperCase()}`);
+        }
+
+        // Tab Switcher
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+
+            if (tabId === 'verify') {
+                populateVerifyDropdown();
+            }
+        }
+
+        // Render Kanban Board
+        function renderBoard() {
+            const cols = {
+                submitted: document.getElementById('col-submitted'),
+                progress: document.getElementById('col-progress'),
+                reported: document.getElementById('col-reported'),
+                verified: document.getElementById('col-verified')
+            };
+
+            Object.values(cols).forEach(c => c.innerHTML = '');
+
+            let counts = { submitted: 0, progress: 0, reported: 0, verified: 0 };
+
+            tickets.forEach(ticket => {
+                let colKey = 'submitted';
+                if (ticket.status === 'IN_PROGRESS') colKey = 'progress';
+                else if (ticket.status === 'REPORTED_FIXED') colKey = 'reported';
+                else if (ticket.status === 'VERIFIED_FIXED') colKey = 'verified';
+
+                counts[colKey]++;
+
+                const card = document.createElement('div');
+                card.className = 'ticket-card';
+                card.onclick = () => openTicketModal(ticket.id);
+
+                let actionHtml = '';
+                if (ticket.status === 'REPORTED_FIXED') {
+                    actionHtml = `
+                        <div class="verify-action-box" onclick="event.stopPropagation()">
+                            <span style="font-size: 0.72rem; color: #fbbf24;">Code: <strong>${ticket.code}</strong></span>
+                            <button class="btn-confirm-fix" onclick="quickVerify('${ticket.id}')">Resident Confirm</button>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="ticket-top">
+                        <span class="ticket-id">${ticket.id}</span>
+                        <span class="band-badge band-${ticket.band}">${ticket.band} &bull; ${ticket.slaHours}h SLA</span>
+                    </div>
+                    <div class="ticket-title">${ticket.title}</div>
+                    <div class="ticket-location">📍 ${ticket.facility} &bull; ${ticket.room}</div>
+                    <div class="ticket-meta">
+                        <span class="status-pill ${ticket.statusColor}">
+                            ● ${ticket.statusLabel}
+                        </span>
+                        <span style="color: var(--text-muted);">${ticket.category}</span>
+                    </div>
+                    ${actionHtml}
+                `;
+
+                cols[colKey].appendChild(card);
+            });
+
+            document.getElementById('count-submitted').textContent = counts.submitted;
+            document.getElementById('count-progress').textContent = counts.progress;
+            document.getElementById('count-reported').textContent = counts.reported;
+            document.getElementById('count-verified').textContent = counts.verified;
+
+            document.getElementById('metricTotal').textContent = tickets.length;
+            document.getElementById('metricAmber').textContent = counts.reported;
+            document.getElementById('metricGreen').textContent = counts.verified;
+        }
+
+        // Live Priority Meter Calculation
+        function updateScorePreview() {
+            const severityWeights = { minor: 10, moderate: 25, major: 40, critical: 50 };
+            const sev = document.getElementById('reqSeverity').value;
+            const sevPts = severityWeights[sev] || 10;
+
+            const isSafety = document.getElementById('reqSafety').checked;
+            const safetyPts = isSafety ? 30 : 0;
+
+            const extraPeople = parseInt(document.getElementById('reqExtraPeople').value || 0, 10);
+            const affectedPts = Math.min(extraPeople * 5, 15);
+
+            const bldgSelect = document.getElementById('reqBuilding');
+            const isCriticalLoc = bldgSelect.selectedOptions[0].getAttribute('data-critical') === 'true';
+            const locPts = isCriticalLoc ? 10 : 0;
+
+            let total = sevPts + safetyPts + affectedPts + locPts;
+            total = Math.min(100, Math.max(0, total));
+
+            let band = 'P4';
+            let sla = '168 Hours (7 Days)';
+            let bandClass = 'band-P4';
+            let bandLabel = 'P4 • LOW';
+            let circleColor = '#94a3b8';
+
+            if (total >= 75) {
+                band = 'P1';
+                sla = '4 Hours (Emergency)';
+                bandClass = 'band-P1';
+                bandLabel = 'P1 • CRITICAL';
+                circleColor = '#ef4444';
+            } else if (total >= 55) {
+                band = 'P2';
+                sla = '24 Hours (Urgent)';
+                bandClass = 'band-P2';
+                bandLabel = 'P2 • HIGH';
+                circleColor = '#f59e0b';
+            } else if (total >= 30) {
+                band = 'P3';
+                sla = '72 Hours';
+                bandClass = 'band-P3';
+                bandLabel = 'P3 • MEDIUM';
+                circleColor = '#3b82f6';
+            }
+
+            document.getElementById('calcScoreVal').textContent = total;
+            document.getElementById('calcBandPill').className = 'score-band-pill ' + bandClass;
+            document.getElementById('calcBandPill').textContent = bandLabel;
+            document.getElementById('calcSlaVal').textContent = sla;
+            document.getElementById('scoreCircle').style.borderColor = circleColor;
+
+            document.getElementById('ptsSeverity').textContent = '+' + sevPts;
+            document.getElementById('ptsSafety').textContent = '+' + safetyPts;
+            document.getElementById('ptsAffected').textContent = '+' + affectedPts;
+            document.getElementById('ptsLocation').textContent = '+' + locPts;
+            document.getElementById('ptsTotal').textContent = total + ' / 100';
+        }
+
+        // Handle New Ticket Submission
+        function handleNewTicket(e) {
+            e.preventDefault();
+
+            const title = document.getElementById('reqTitle').value;
+            const facility = document.getElementById('reqBuilding').value;
+            const room = document.getElementById('reqRoom').value;
+            const category = document.getElementById('reqCategory').value;
+            const severity = document.getElementById('reqSeverity').value;
+            const safety = document.getElementById('reqSafety').checked;
+
+            const score = parseInt(document.getElementById('calcScoreVal').textContent, 10);
+            let band = 'P4', sla = 168;
+            if (score >= 75) { band = 'P1'; sla = 4; }
+            else if (score >= 55) { band = 'P2'; sla = 24; }
+            else if (score >= 30) { band = 'P3'; sla = 72; }
+
+            const newId = 'FIX-' + (100 + tickets.length + 1);
+            const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+            tickets.unshift({
+                id: newId,
+                title: title,
+                facility: facility,
+                room: room,
+                category: category,
+                severity: severity,
+                safety: safety,
+                score: score,
+                band: band,
+                slaHours: sla,
+                status: 'SUBMITTED',
+                statusColor: 'blue',
+                statusLabel: 'Submitted',
+                requester: 'rita_student',
+                technician: null,
+                code: randomCode,
+                created: formatClock(simulatedTime)
+            });
+
+            renderBoard();
+            document.getElementById('newRequestForm').reset();
+            updateScorePreview();
+            switchTab('board');
+            showToast('Request Submitted', `${newId} (${band} • ${sla}h SLA) dispatched.`);
+        }
+
+        // Verification Dropdown
+        function populateVerifyDropdown() {
+            const select = document.getElementById('verifySelectTicket');
+            select.innerHTML = '';
+            const amberTickets = tickets.filter(t => t.status === 'REPORTED_FIXED');
+
+            if (amberTickets.length === 0) {
+                select.innerHTML = '<option value="">No tickets awaiting confirmation</option>';
+                document.getElementById('verifyDetailsBox').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('verifyDetailsBox').style.display = 'block';
+            amberTickets.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = `${t.id} — ${t.title} (${t.facility})`;
+                select.appendChild(opt);
+            });
+
+            loadTicketVerificationDetails();
+        }
+
+        function loadTicketVerificationDetails() {
+            const id = document.getElementById('verifySelectTicket').value;
+            const ticket = tickets.find(t => t.id === id);
+            if (!ticket) return;
+
+            document.getElementById('vReqUser').textContent = `${ticket.requester} (${ticket.room})`;
+            document.getElementById('vTechUser').textContent = ticket.technician || 'Assigned Technician';
+            document.getElementById('vTargetCode').textContent = ticket.code;
+            document.getElementById('inputVerifyCode').value = '';
+        }
+
+        // Submit Code Verification
+        function submitCodeVerification() {
+            const id = document.getElementById('verifySelectTicket').value;
+            const inputCode = document.getElementById('inputVerifyCode').value.trim();
+            const ticket = tickets.find(t => t.id === id);
+
+            if (!ticket) return;
+
+            if (inputCode !== ticket.code) {
+                alert('❌ Invalid Completion Code. You entered: "' + inputCode + '". Please enter the matching code: ' + ticket.code);
+                return;
+            }
+
+            ticket.status = 'VERIFIED_FIXED';
+            ticket.statusColor = 'green';
+            ticket.statusLabel = `Confirmed Fixed (Code #${ticket.code})`;
+
+            renderBoard();
+            populateVerifyDropdown();
+            showToast('Repair Verified!', `${ticket.id} confirmed fixed. Turned GREEN.`);
+        }
+
+        function reopenTicketAction() {
+            const id = document.getElementById('verifySelectTicket').value;
+            const ticket = tickets.find(t => t.id === id);
+            if (!ticket) return;
+
+            ticket.status = 'IN_PROGRESS';
+            ticket.statusColor = 'blue';
+            ticket.statusLabel = 'Reopened by Resident';
+
+            renderBoard();
+            populateVerifyDropdown();
+            showToast('Ticket Reopened', `${ticket.id} sent back to technician.`);
+        }
+
+        function quickVerify(ticketId) {
+            const ticket = tickets.find(t => t.id === ticketId);
+            if (!ticket) return;
+
+            ticket.status = 'VERIFIED_FIXED';
+            ticket.statusColor = 'green';
+            ticket.statusLabel = `Confirmed Fixed (Code #${ticket.code})`;
+
+            renderBoard();
+            showToast('Resident Confirmed!', `${ticket.id} confirmed fixed! Status is now GREEN.`);
+        }
+
+        // Open Ticket Detail Modal
+        function openTicketModal(ticketId) {
+            const ticket = tickets.find(t => t.id === ticketId);
+            if (!ticket) return;
+
+            const modal = document.getElementById('ticketModal');
+            const body = document.getElementById('modalBody');
+
+            let actionButtons = '';
+            if (ticket.status === 'SUBMITTED') {
+                actionButtons = `<button class="btn-submit" onclick="transitionTicket('${ticket.id}', 'IN_PROGRESS', 'blue', 'In Progress')">Assign & Begin Work</button>`;
+            } else if (ticket.status === 'IN_PROGRESS') {
+                actionButtons = `<button class="btn-submit" style="background: var(--accent-amber); color: #000;" onclick="transitionTicket('${ticket.id}', 'REPORTED_FIXED', 'amber', 'Reported Fixed (Awaiting Resident)')">Mark Work Complete (Amber)</button>`;
+            } else if (ticket.status === 'REPORTED_FIXED') {
+                actionButtons = `<button class="btn-submit" style="background: var(--accent-green); color: #000;" onclick="transitionTicket('${ticket.id}', 'VERIFIED_FIXED', 'green', 'Confirmed Fixed (Code #${ticket.code})')">Verify & Complete (Resident Code: ${ticket.code})</button>`;
+            }
+
+            body.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem;">
+                    <span style="font-size: 0.9rem; font-weight: 700; color: #38bdf8;">${ticket.id}</span>
+                    <span class="band-badge band-${ticket.band}">${ticket.band} &bull; Score ${ticket.score}</span>
+                </div>
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">${ticket.title}</h3>
+                <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1.25rem;">📍 ${ticket.facility} &bull; ${ticket.room}</div>
+
+                <div style="background: rgba(255,255,255,0.04); border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem; font-size: 0.85rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <div><span style="color: #64748b;">Status:</span> <strong style="color: #fff;">${ticket.statusLabel}</strong></div>
+                    <div><span style="color: #64748b;">Category:</span> <strong style="color: #fff;">${ticket.category}</strong></div>
+                    <div><span style="color: #64748b;">Requester:</span> <strong style="color: #fff;">${ticket.requester}</strong></div>
+                    <div><span style="color: #64748b;">Technician:</span> <strong style="color: #fff;">${ticket.technician || 'Unassigned'}</strong></div>
+                    <div><span style="color: #64748b;">SLA Window:</span> <strong style="color: #fff;">${ticket.slaHours} Hours</strong></div>
+                    <div><span style="color: #64748b;">Completion Code:</span> <code style="color: #38bdf8; font-weight: 700;">${ticket.code}</code></div>
+                </div>
+
+                ${actionButtons}
+            `;
+
+            modal.classList.add('open');
+        }
+
+        function transitionTicket(ticketId, newStatus, newColor, newLabel) {
+            const ticket = tickets.find(t => t.id === ticketId);
+            if (!ticket) return;
+
+            ticket.status = newStatus;
+            ticket.statusColor = newColor;
+            ticket.statusLabel = newLabel;
+            if (newStatus === 'IN_PROGRESS' && !ticket.technician) {
+                ticket.technician = 'Tom Technician';
+            }
+
+            renderBoard();
+            closeModal();
+            showToast('State Transition', `${ticket.id} transitioned to ${newLabel}`);
+        }
+
+        function closeModal(e) {
+            document.getElementById('ticketModal').classList.remove('open');
+        }
+
+        // Toast Helper
+        function showToast(title, msg) {
+            const toast = document.getElementById('toastNotice');
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            renderBoard();
+            updateScorePreview();
+        });
+    </script>
+</body>
+</html>
