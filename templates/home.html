@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}FixIt - Campus Maintenance Portal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm p-4 p-md-5 mb-4 rounded-4 bg-white">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-3 fs-2">🔧</div>
+                <div>
+                    <h1 class="display-6 fw-bold mb-0">FixIt</h1>
+                    <p class="text-muted mb-0">Campus & Residential Maintenance Platform</p>
+                </div>
+            </div>
+
+            <p class="lead text-secondary my-3">
+                <em>"FixIt measures whether things actually got fixed, not whether tickets got closed."</em>
+            </p>
+
+            <div class="row g-3 my-2">
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 bg-light">
+                        <div class="fw-semibold text-primary">Requester</div>
+                        <small class="text-muted">Report breakdowns, track repair stages, confirm completion.</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 bg-light">
+                        <div class="fw-semibold text-warning">Technician</div>
+                        <small class="text-muted">View assignments, pause for parts, report repairs with checklist.</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 bg-light">
+                        <div class="fw-semibold text-success">Admin</div>
+                        <small class="text-muted">Triage requests, assign technicians, monitor campus SLAs.</small>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <span class="badge bg-light text-dark border">Version: <strong>{{ version }}</strong></span>
+                    {% if demo_mode %}
+                        <span class="badge bg-warning text-dark ms-1">Demo Mode Active</span>
+                    {% endif %}
+                </div>
+                <div>
+                    {% if user.is_authenticated %}
+                        <span class="text-muted me-2">Welcome back, <strong>{{ user.username }}</strong>!</span>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-primary px-4 fw-semibold">Sign In to FixIt</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

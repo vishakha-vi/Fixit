@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FixIt - Campus Maintenance{% endblock %}</title>
+    <!-- Vendored Bootstrap CSS (Local, No CDN) -->
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap.min.css' %}">
+    <style>
+        :root {
+            --fixit-blue: #0d6efd;
+            --fixit-amber: #f59e0b;
+            --fixit-green: #10b981;
+            --fixit-dark: #0f172a;
+        }
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .footer {
+            margin-top: auto;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+        .badge-verified {
+            background-color: var(--fixit-green);
+            color: #fff;
+        }
+        .badge-reported {
+            background-color: var(--fixit-amber);
+            color: #1e293b;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
+                    <span class="fs-4">🔧</span>
+                    <span>FixIt</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#fixitNav" aria-controls="fixitNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="fixitNav">
+                    <ul class="navbar-nav ms-auto align-items-center gap-2">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'healthz' %}">Health API</a>
+                        </li>
+                        {% if user.is_authenticated %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-light" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <strong>{{ user.username }}</strong>
+                                    <span class="badge bg-secondary ms-1">{{ user.get_role_display }}</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                                    <li><h6 class="dropdown-header">Signed in as {{ user.username }}</h6></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form method="post" action="{% url 'logout' %}" class="px-3 py-1">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100">Sign out</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="btn btn-primary btn-sm px-3" href="{% url 'login' %}">Sign in</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container my-4 flex-grow-1">
+        {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer py-3 text-center text-muted small">
+        <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span>FixIt Maintenance Platform &copy; 2026. Residential University Campus.</span>
+            <span>Version: <code>{{ version|default:"0.1.0" }}</code></span>
+        </div>
+    </footer>
+
+    <!-- Vendored Bootstrap JS & HTMX (Local, No CDN) -->
+    <script src="{% static 'vendor/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'vendor/htmx.min.js' %}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
