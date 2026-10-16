@@ -100,6 +100,11 @@ def home_view(request):
     return render(request, "home.html", context)
 
 
+def showcase_view(request):
+    """Interactive client showcase and live priority simulator."""
+    return render(request, "showcase.html", {})
+
+
 @feature_required(F.DASHBOARD)
 def dashboard_view(request):
     period = request.GET.get("period", "30")

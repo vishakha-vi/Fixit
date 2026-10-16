@@ -1,0 +1,3223 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FixIt — Campus & Residential Maintenance Platform</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔧</text></svg>">
+    <style>
+        /* ==========================================================================
+           FixIt Design System — Light Bluish Palette (Default) & Dark Cyber Theme
+           ========================================================================== */
+        :root {
+            /* Light Bluish Theme (Default) */
+            --bg-base: #edf3fa;
+            --bg-gradient: linear-gradient(135deg, #e8f1fc 0%, #f4f8fe 45%, #e1eefe 100%);
+            --bg-surface: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8fbff;
+            --bg-glass: rgba(255, 255, 255, 0.92);
+            --border-subtle: #dbeafe;
+            --border-medium: #bfdbfe;
+            --border-focus: #2563eb;
+
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --text-highlight: #1e3a8a;
+
+            /* Invariant Status Colors */
+            --status-submitted: #2563eb;
+            --status-progress: #0284c7;
+            --status-amber: #d97706;       /* Reported Fixed ONLY */
+            --status-green: #059669;       /* Verified Fixed ONLY */
+            --status-red: #dc2626;
+
+            /* Brand & Accent Highlights */
+            --accent-blue: #2563eb;
+            --accent-blue-hover: #1d4ed8;
+            --accent-cyan: #0284c7;
+            --accent-purple: #7c3aed;
+            --accent-emerald: #059669;
+            --accent-amber: #d97706;
+
+            /* Shadows & Elevations */
+            --shadow-sm: 0 2px 6px rgba(37, 99, 235, 0.05);
+            --shadow-card: 0 6px 20px -2px rgba(37, 99, 235, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+            --shadow-hover: 0 12px 28px -4px rgba(37, 99, 235, 0.16);
+            --shadow-modal: 0 24px 50px -10px rgba(15, 23, 42, 0.25);
+
+            --glow-green: 0 0 20px rgba(16, 185, 129, 0.35);
+            --glow-amber: 0 0 20px rgba(245, 158, 11, 0.35);
+            --glow-blue: 0 0 20px rgba(37, 99, 235, 0.3);
+
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-full: 9999px;
+            --transition-smooth: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Dark Theme Alternate */
+        [data-theme="dark"] {
+            --bg-base: #0a0f1d;
+            --bg-gradient: radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.15) 0px, transparent 50%),
+                           radial-gradient(at 100% 0%, rgba(124, 58, 237, 0.12) 0px, transparent 50%),
+                           radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+            --bg-surface: #10192d;
+            --bg-card: rgba(18, 28, 48, 0.85);
+            --bg-card-hover: rgba(26, 38, 64, 0.95);
+            --bg-glass: rgba(16, 25, 45, 0.8);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-medium: rgba(255, 255, 255, 0.16);
+            --border-focus: #3b82f6;
+
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --text-highlight: #ffffff;
+
+            --shadow-card: 0 10px 30px -4px rgba(0, 0, 0, 0.5);
+            --shadow-hover: 0 16px 36px -4px rgba(0, 0, 0, 0.7);
+            --shadow-modal: 0 24px 60px -8px rgba(0, 0, 0, 0.85);
+        }
+
+        /* Global Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            background-image: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.04);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: var(--radius-full);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* ==========================================================================
+           Navigation Bar
+           ========================================================================== */
+        .navbar {
+            background: #0f233a;
+            background-image: linear-gradient(135deg, #0d1e33 0%, #152e4d 100%);
+            color: #ffffff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 0.75rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 16px rgba(15, 35, 58, 0.15);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: #ffffff;
+        }
+
+        .brand-icon {
+            background: linear-gradient(135deg, #3b82f6, #06b6d4);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            box-shadow: 0 2px 10px rgba(6, 182, 212, 0.4);
+            transition: var(--transition-smooth);
+        }
+        .brand-icon:hover {
+            transform: rotate(12deg) scale(1.05);
+        }
+
+        .brand-title {
+            font-weight: 800;
+            font-size: 1.35rem;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+        }
+
+        .brand-tag {
+            font-size: 0.68rem;
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            padding: 0.15rem 0.55rem;
+            border-radius: var(--radius-full);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .brand-tag .pulse-dot {
+            width: 6px;
+            height: 6px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #10b981;
+            animation: pulse 1.8s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        /* Clock Controls Pill */
+        .clock-pill {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: var(--radius-full);
+            padding: 0.35rem 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+            color: #e2e8f0;
+        }
+
+        .clock-time {
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
+            font-weight: 700;
+            color: #38bdf8;
+            letter-spacing: 0.5px;
+        }
+
+        .clock-btn-group {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .btn-clock {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.2rem 0.5rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+        .btn-clock:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        /* Nav Right Controls */
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* Role Switcher */
+        .role-switcher {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 0.25rem;
+            border-radius: var(--radius-full);
+        }
+
+        .role-btn {
+            background: transparent;
+            border: none;
+            color: #cbd5e1;
+            padding: 0.35rem 0.85rem;
+            border-radius: var(--radius-full);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+        .role-btn:hover {
+            color: #ffffff;
+        }
+        .role-btn.active {
+            background: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.5);
+        }
+
+        /* Utility Icon Buttons */
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* ==========================================================================
+           Main Workspace Container
+           ========================================================================== */
+        .main-container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1.5rem 1.5rem 3rem;
+            flex-grow: 1;
+        }
+
+        /* Core Thesis Banner */
+        .thesis-banner {
+            background: #ffffff;
+            border: 1px solid var(--border-medium);
+            border-left: 5px solid #0284c7;
+            border-radius: var(--radius-lg);
+            padding: 1.15rem 1.6rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow-card);
+            position: relative;
+        }
+        [data-theme="dark"] .thesis-banner {
+            background: var(--bg-card);
+            border-color: var(--border-medium);
+        }
+
+        .thesis-text {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            line-height: 1.45;
+        }
+        .thesis-text strong {
+            color: #0284c7;
+            font-weight: 800;
+        }
+        .thesis-subtext {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin-top: 0.35rem;
+        }
+
+        .banner-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .backend-link-btn {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 0.55rem 1.15rem;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition-smooth);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+        .backend-link-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
+        }
+
+        /* ==========================================================================
+           Metrics Grid
+           ========================================================================== */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.2rem 1.4rem;
+            transition: var(--transition-smooth);
+            position: relative;
+            box-shadow: var(--shadow-card);
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .metric-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-medium);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3.5px;
+        }
+        .metric-card.blue::before { background: #2563eb; }
+        .metric-card.amber::before { background: #d97706; }
+        .metric-card.green::before { background: #059669; }
+        .metric-card.purple::before { background: #7c3aed; }
+
+        .metric-label {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .metric-value-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+        .metric-value.blue { color: #2563eb; }
+        .metric-value.amber { color: #d97706; }
+        .metric-value.green { color: #059669; }
+
+        .metric-subtext {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-top: 0.25rem;
+        }
+
+        /* Sparkline Indicator */
+        .sparkline-svg {
+            width: 70px;
+            height: 24px;
+            stroke-width: 2.5;
+            fill: none;
+            stroke-linecap: round;
+        }
+
+        /* ==========================================================================
+           Tabs Navigation & Filter Controls
+           ========================================================================== */
+        .tabs-header-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .tabs-header {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.8rem 1.25rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition-smooth);
+            white-space: nowrap;
+        }
+        .tab-btn:hover {
+            color: #2563eb;
+        }
+        .tab-btn.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+
+        /* Board Controls */
+        .board-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .search-input {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-medium);
+            color: var(--text-primary);
+            padding: 0.45rem 0.85rem 0.45rem 2.2rem;
+            border-radius: var(--radius-full);
+            font-size: 0.82rem;
+            width: 210px;
+            transition: var(--transition-smooth);
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            width: 270px;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+        .search-icon {
+            position: absolute;
+            left: 0.8rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .filter-pills {
+            display: flex;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.25rem 0.65rem;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+        .filter-pill:hover {
+            border-color: var(--border-medium);
+            color: var(--text-primary);
+        }
+        .filter-pill.active {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #2563eb;
+        }
+
+        .btn-view-toggle {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-medium);
+            color: var(--text-secondary);
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: var(--transition-smooth);
+        }
+        .btn-view-toggle:hover {
+            color: #2563eb;
+            border-color: #2563eb;
+        }
+
+        /* ==========================================================================
+           Tab Content Panes
+           ========================================================================== */
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+            animation: fadeIn 0.25s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==========================================================================
+           Kanban Board Layout
+           ========================================================================== */
+        .kanban-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+            align-items: start;
+        }
+        @media (max-width: 1100px) {
+            .kanban-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 640px) {
+            .kanban-grid { grid-template-columns: 1fr; }
+        }
+
+        .kanban-col {
+            background: #f1f6fc;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            min-height: 540px;
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition-smooth);
+        }
+        [data-theme="dark"] .kanban-col {
+            background: rgba(15, 23, 42, 0.45);
+        }
+        .kanban-col.drag-over {
+            border-color: #0284c7;
+            background: #e0f2fe;
+        }
+
+        .kanban-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .kanban-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge-count {
+            background: #e2e8f0;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            padding: 0.15rem 0.55rem;
+            border-radius: var(--radius-full);
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+
+        /* Ticket Cards */
+        .ticket-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            flex-grow: 1;
+            min-height: 200px;
+        }
+
+        .ticket-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.15rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            position: relative;
+            box-shadow: var(--shadow-sm);
+        }
+        .ticket-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-medium);
+            box-shadow: var(--shadow-hover);
+        }
+        .ticket-card.dragging {
+            opacity: 0.4;
+            transform: scale(0.98);
+        }
+
+        .ticket-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .ticket-id {
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #2563eb;
+        }
+
+        .band-badge {
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 0.2rem 0.55rem;
+            border-radius: 4px;
+            letter-spacing: 0.4px;
+        }
+        .band-P1 { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+        .band-P2 { background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; }
+        .band-P3 { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
+        .band-P4 { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+        .ticket-title {
+            font-size: 0.94rem;
+            font-weight: 700;
+            margin-bottom: 0.45rem;
+            line-height: 1.35;
+            color: var(--text-primary);
+        }
+
+        .ticket-location {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-bottom: 0.75rem;
+        }
+
+        /* SLA Timer Pill */
+        .sla-countdown-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.72rem;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            padding: 0.2rem 0.55rem;
+            border-radius: 4px;
+            background: #f1f5f9;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+        }
+        .sla-countdown-pill.warning {
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fcd34d;
+        }
+        .sla-countdown-pill.overdue {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fca5a5;
+        }
+
+        .ticket-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 0.65rem;
+            font-size: 0.75rem;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            border-radius: var(--radius-full);
+        }
+        .status-pill.blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        .status-pill.amber {
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fcd34d;
+        }
+        .status-pill.green {
+            background: #d1fae5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            box-shadow: 0 0 10px rgba(5, 150, 105, 0.2);
+        }
+
+        /* Reported Fixed (Amber) Action Box */
+        .verify-action-box {
+            background: #fffbeb;
+            border: 1px dashed #f59e0b;
+            border-radius: var(--radius-sm);
+            padding: 0.6rem;
+            margin-top: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .btn-confirm-fix {
+            background: #10b981;
+            color: #ffffff;
+            border: none;
+            padding: 0.35rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .btn-confirm-fix:hover {
+            transform: scale(1.04);
+            box-shadow: var(--glow-green);
+        }
+
+        .empty-col-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            text-align: center;
+            gap: 0.5rem;
+        }
+
+        /* Table View Container */
+        .list-view-container {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+        }
+        .list-view-container.active {
+            display: block;
+        }
+
+        .fixit-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+        .fixit-table th {
+            background: #f8fafc;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            letter-spacing: 0.6px;
+            padding: 0.85rem 1.25rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .fixit-table td {
+            padding: 0.85rem 1.25rem;
+            border-bottom: 1px solid var(--border-subtle);
+            vertical-align: middle;
+        }
+        .fixit-table tr:hover {
+            background: #f1f6fc;
+            cursor: pointer;
+        }
+
+        /* ==========================================================================
+           Tab 2: Submit Request & Live Priority Meter
+           ========================================================================== */
+        .form-layout {
+            display: grid;
+            grid-template-columns: 1.25fr 0.75fr;
+            gap: 1.5rem;
+        }
+        @media (max-width: 950px) {
+            .form-layout { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.6rem 1.8rem;
+            box-shadow: var(--shadow-card);
+        }
+
+        .panel-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .panel-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+        }
+        .btn-preset {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #2563eb;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.25rem 0.65rem;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+        .btn-preset:hover {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .form-group {
+            margin-bottom: 1.15rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 0.35rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: var(--text-primary);
+            padding: 0.65rem 0.9rem;
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: var(--transition-smooth);
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .form-textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            cursor: pointer;
+            padding: 0.7rem 0.85rem;
+            background: #f8fafc;
+            border-radius: var(--radius-md);
+            border: 1px solid #e2e8f0;
+            transition: var(--transition-smooth);
+        }
+        .checkbox-group:hover {
+            border-color: #cbd5e1;
+            background: #f1f5f9;
+        }
+        .checkbox-group input {
+            accent-color: #dc2626;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        /* Score Widget */
+        .score-widget {
+            background: #ffffff;
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+            text-align: center;
+            box-shadow: var(--shadow-card);
+            position: relative;
+        }
+
+        .gauge-wrapper {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            margin: 0 auto 1.25rem;
+        }
+        .gauge-svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        .gauge-bg {
+            fill: none;
+            stroke: #e2e8f0;
+            stroke-width: 12;
+        }
+        .gauge-bar {
+            fill: none;
+            stroke: #2563eb;
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 440;
+            stroke-dashoffset: 330;
+            transition: stroke-dashoffset 0.4s ease, stroke 0.4s ease;
+        }
+        .gauge-center-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .score-num {
+            font-size: 2.6rem;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -1.5px;
+            font-family: var(--font-mono);
+            color: #0f172a;
+        }
+        .score-max {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .score-band-pill {
+            display: inline-block;
+            font-size: 0.95rem;
+            font-weight: 800;
+            padding: 0.4rem 1.4rem;
+            border-radius: var(--radius-full);
+            margin-bottom: 0.85rem;
+            letter-spacing: 0.5px;
+            transition: var(--transition-smooth);
+        }
+
+        .score-sla-info {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.25rem;
+        }
+        .score-sla-info strong {
+            color: #0f172a;
+        }
+
+        .score-breakdown {
+            text-align: left;
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 1.1rem;
+            font-size: 0.8rem;
+        }
+
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.45rem;
+            color: var(--text-secondary);
+        }
+        .breakdown-row.total {
+            font-weight: 800;
+            color: var(--text-primary);
+            border-top: 1px dashed var(--border-medium);
+            padding-top: 0.5rem;
+            margin-top: 0.5rem;
+            font-size: 0.88rem;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #ffffff;
+            border: none;
+            width: 100%;
+            padding: 0.85rem;
+            border-radius: var(--radius-md);
+            font-weight: 800;
+            font-size: 0.95rem;
+            cursor: pointer;
+            margin-top: 1.25rem;
+            transition: var(--transition-smooth);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+        }
+
+        /* ==========================================================================
+           Tab 3: Completion Code Verification
+           ========================================================================== */
+        .verify-card {
+            max-width: 680px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-lg);
+            padding: 2.2rem;
+            box-shadow: var(--shadow-modal);
+            position: relative;
+        }
+
+        .pin-inputs-row {
+            display: flex;
+            gap: 0.65rem;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+        .pin-input {
+            width: 48px;
+            height: 58px;
+            font-size: 1.6rem;
+            font-weight: 800;
+            text-align: center;
+            font-family: var(--font-mono);
+            background: #ffffff;
+            border: 2px solid #cbd5e1;
+            color: #0f172a;
+            border-radius: var(--radius-md);
+            transition: var(--transition-smooth);
+        }
+        .pin-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 12px rgba(37, 99, 235, 0.25);
+            transform: translateY(-2px);
+        }
+        .pin-input.filled {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .shake {
+            animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        .verify-checklist {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            font-size: 0.85rem;
+        }
+        .verify-checklist label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        .verify-checklist input {
+            accent-color: #10b981;
+        }
+
+        /* ==========================================================================
+           Tab 4: Worker Locator
+           ========================================================================== */
+        .worker-roster-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .worker-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            box-shadow: var(--shadow-card);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-smooth);
+        }
+        .worker-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+        .worker-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+        }
+        .worker-card.status-avail::before { background: #10b981; }
+        .worker-card.status-busy::before { background: #f59e0b; }
+        .worker-card.status-off::before { background: #94a3b8; }
+
+        .worker-top {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .worker-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: #1d4ed8;
+            border: 2px solid #93c5fd;
+        }
+        .worker-info {
+            flex-grow: 1;
+        }
+        .worker-name {
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+        .worker-trade {
+            font-size: 0.76rem;
+            color: var(--text-secondary);
+        }
+
+        .worker-metrics-row {
+            display: flex;
+            justify-content: space-between;
+            background: #f8fafc;
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 0.75rem;
+            font-size: 0.78rem;
+        }
+
+        /* ==========================================================================
+           Tab 5: Architecture Specs
+           ========================================================================== */
+        .specs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        @media (max-width: 900px) {
+            .specs-grid { grid-template-columns: 1fr; }
+        }
+
+        .state-flow-box {
+            background: #f8fafc;
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            margin-top: 1rem;
+        }
+
+        .state-stepper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            padding: 1rem 0;
+            gap: 0.25rem;
+            overflow-x: auto;
+        }
+        .state-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            font-size: 0.72rem;
+            font-weight: 700;
+            min-width: 80px;
+            z-index: 2;
+        }
+        .step-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.4rem;
+            font-size: 0.8rem;
+            color: #475569;
+            transition: var(--transition-smooth);
+        }
+        .state-step.active .step-circle {
+            border-color: #2563eb;
+            color: #2563eb;
+            background: #eff6ff;
+        }
+        .state-step.amber .step-circle {
+            border-color: #f59e0b;
+            color: #b45309;
+            background: #fffbeb;
+        }
+        .state-step.green .step-circle {
+            border-color: #10b981;
+            color: #047857;
+            background: #ecfdf5;
+        }
+
+        /* ==========================================================================
+           Modal & Toasts
+           ========================================================================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(6px);
+            z-index: 500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .modal-overlay.open {
+            display: flex;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-lg);
+            max-width: 620px;
+            width: 100%;
+            padding: 2rem;
+            position: relative;
+            box-shadow: var(--shadow-modal);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        [data-theme="dark"] .modal-content {
+            background: #10192d;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .modal-close:hover {
+            color: var(--text-primary);
+            background: #f1f5f9;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #064e3b;
+            border: 1px solid #10b981;
+            color: #ecfdf5;
+            padding: 1.1rem 1.6rem;
+            border-radius: var(--radius-md);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+            display: none;
+            align-items: center;
+            gap: 1rem;
+            z-index: 1000;
+        }
+        .toast.show {
+            display: flex;
+            animation: toastSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes toastSlide {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .footer {
+            border-top: 1px solid var(--border-subtle);
+            padding: 1.5rem 2rem;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            background: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        [data-theme="dark"] .footer {
+            background: #0b1120;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Confetti Canvas -->
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <a href="#" class="nav-brand">
+            <div class="brand-icon">🔧</div>
+            <div>
+                <span class="brand-title">FixIt</span>
+                <span class="brand-tag"><span class="pulse-dot"></span> Verified Repairs • Campus Ready</span>
+            </div>
+        </a>
+
+        <!-- Simulated Clock Controls -->
+        <div class="clock-pill">
+            <span>⏱️ Demo Clock:</span>
+            <span class="clock-time" id="simulatedClock">2026-10-16 16:32</span>
+            <div class="clock-btn-group">
+                <button class="btn-clock" onclick="advanceClock(1)" title="Advance 1 Hour (+1h)">+1h</button>
+                <button class="btn-clock" onclick="advanceClock(4)" title="Advance 4 Hours (P1 SLA deadline)">+4h</button>
+                <button class="btn-clock" onclick="advanceClock(24)" title="Advance 24 Hours (+1 Day)">+24h</button>
+                <button class="btn-clock" onclick="advanceClock(72)" title="Advance 72 Hours (Auto-close test!)">+72h</button>
+                <button class="btn-clock" onclick="resetClock()" title="Reset Clock to Baseline">↺</button>
+            </div>
+        </div>
+
+        <!-- Role Simulator & Utilities -->
+        <div class="nav-controls">
+            <div class="role-switcher">
+                <button class="role-btn active" id="roleRequester" onclick="setRole('requester')" title="Resident / Student view">
+                    👤 Requester
+                </button>
+                <button class="role-btn" id="roleTechnician" onclick="setRole('technician')" title="Worker / Technician view">
+                    🛠️ Technician
+                </button>
+                <button class="role-btn" id="roleAdmin" onclick="setRole('admin')" title="Campus Admin view">
+                    ⚡ Admin
+                </button>
+            </div>
+
+            <!-- Audio Toggle -->
+            <button class="icon-btn" id="btnAudioToggle" onclick="toggleAudio()" title="Sound Effects">
+                🔊
+            </button>
+
+            <!-- Light / Dark Theme Switch -->
+            <button class="icon-btn" id="btnThemeToggle" onclick="toggleTheme()" title="Switch Light/Dark Palette">
+                ☀️
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="main-container">
+
+        <!-- Core Invariant & Thesis Banner -->
+        <section class="thesis-banner">
+            <div class="thesis-text">
+                <strong>FixIt Core Invariant:</strong> <em>"FixIt measures whether things actually got fixed, not whether tickets got closed."</em>
+                <div class="thesis-subtext">
+                    Technicians only report tasks <span style="color: #d97706; font-weight: 700;">Reported Fixed (Amber ⚠️)</span>. A ticket strictly turns <span style="color: #059669; font-weight: 700;">Verified Fixed (Green ✅)</span> when the resident inputs their 6-digit confirmation code.
+                </div>
+            </div>
+            <div class="banner-actions">
+                <a href="http://127.0.0.1:8000/" target="_blank" class="backend-link-btn" title="Open Django Dev Server on Port 8000">
+                    🚀 Launch Django Server (:8000)
+                </a>
+                <a href="http://127.0.0.1:8000/healthz" target="_blank" style="color: var(--text-secondary); font-size: 0.82rem; text-decoration: none; font-weight: 700;">
+                    /healthz API
+                </a>
+            </div>
+        </section>
+
+        <!-- Metrics Grid -->
+        <section class="metrics-grid">
+            <div class="metric-card blue" onclick="filterBoardByStatus('ALL')">
+                <div class="metric-label">
+                    <span>Active Campus Requests</span>
+                    <span>📊</span>
+                </div>
+                <div class="metric-value-row">
+                    <span class="metric-value blue" id="metricTotal">8</span>
+                    <svg class="sparkline-svg" viewBox="0 0 70 24">
+                        <path d="M0 18 Q 15 10, 30 14 T 60 4 T 70 8" stroke="#2563eb"></path>
+                    </svg>
+                </div>
+                <div class="metric-subtext">3 P1 Emergencies • Click to view all</div>
+            </div>
+
+            <div class="metric-card amber" onclick="filterBoardByStatus('REPORTED_FIXED')">
+                <div class="metric-label">
+                    <span>Awaiting Resident Fix Confirmation</span>
+                    <span>⚠️</span>
+                </div>
+                <div class="metric-value-row">
+                    <span class="metric-value amber" id="metricAmber">2</span>
+                    <svg class="sparkline-svg" viewBox="0 0 70 24">
+                        <path d="M0 12 Q 20 20, 35 8 T 70 14" stroke="#d97706"></path>
+                    </svg>
+                </div>
+                <div class="metric-subtext">Reported Fixed • Unpaid until confirmed</div>
+            </div>
+
+            <div class="metric-card green" onclick="filterBoardByStatus('VERIFIED_FIXED')">
+                <div class="metric-label">
+                    <span>Resident Verified Fixed</span>
+                    <span>🛡️</span>
+                </div>
+                <div class="metric-value-row">
+                    <span class="metric-value green" id="metricGreen">14</span>
+                    <svg class="sparkline-svg" viewBox="0 0 70 24">
+                        <path d="M0 20 Q 20 16, 40 8 T 70 2" stroke="#059669"></path>
+                    </svg>
+                </div>
+                <div class="metric-subtext">100% Genuine Fixes • Authorized Payouts</div>
+            </div>
+
+            <div class="metric-card purple" onclick="switchTab('specs')">
+                <div class="metric-label">
+                    <span>Campus SLA Adherence</span>
+                    <span>⏱️</span>
+                </div>
+                <div class="metric-value-row">
+                    <span class="metric-value" style="color: #7c3aed;" id="metricSla">96.4%</span>
+                    <svg class="sparkline-svg" viewBox="0 0 70 24">
+                        <path d="M0 14 Q 25 6, 45 8 T 70 3" stroke="#7c3aed"></path>
+                    </svg>
+                </div>
+                <div class="metric-subtext">Avg 3.2h response • Deterministic SLAs</div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs Bar with Search and View Modes -->
+        <div class="tabs-header-container">
+            <nav class="tabs-header">
+                <button class="tab-btn active" id="tabNav-board" onclick="switchTab('board')">📋 Live Ticket Board</button>
+                <button class="tab-btn" id="tabNav-submit" onclick="switchTab('submit')">➕ Submit Request & Priority Meter</button>
+                <button class="tab-btn" id="tabNav-verify" onclick="switchTab('verify')">🔑 Completion Code Verification</button>
+                <button class="tab-btn" id="tabNav-workers" onclick="switchTab('workers')">📍 Worker Locator & Payouts</button>
+                <button class="tab-btn" id="tabNav-specs" onclick="switchTab('specs')">📖 Architecture Specs & Invariants</button>
+            </nav>
+
+            <div class="board-controls" id="boardControlsBar">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" id="boardSearchInput" placeholder="Search ticket ID, title, room..." oninput="handleBoardSearch()">
+                </div>
+
+                <div class="filter-pills">
+                    <button class="filter-pill active" onclick="setPriorityFilter('ALL', this)">All</button>
+                    <button class="filter-pill" onclick="setPriorityFilter('P1', this)">P1</button>
+                    <button class="filter-pill" onclick="setPriorityFilter('P2', this)">P2</button>
+                    <button class="filter-pill" onclick="setPriorityFilter('P3', this)">P3</button>
+                    <button class="filter-pill" onclick="setPriorityFilter('P4', this)">P4</button>
+                </div>
+
+                <button class="btn-view-toggle" id="btnToggleView" onclick="toggleBoardView()">
+                    <span id="viewModeIcon">📑</span> <span id="viewModeText">Table View</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+             TAB 1: LIVE TICKET BOARD
+             ========================================================================== -->
+        <section class="tab-pane active" id="tab-board">
+            <div class="kanban-grid" id="kanbanGridContainer">
+
+                <!-- Column 1: Submitted & Triage -->
+                <div class="kanban-col" id="col-drop-submitted" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'SUBMITTED')">
+                    <div class="kanban-header">
+                        <span class="kanban-title" style="color: #2563eb;">📥 Submitted & Triage</span>
+                        <span class="badge-count" id="count-submitted">0</span>
+                    </div>
+                    <div class="ticket-list" id="col-submitted"></div>
+                </div>
+
+                <!-- Column 2: In Progress -->
+                <div class="kanban-col" id="col-drop-progress" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'IN_PROGRESS')">
+                    <div class="kanban-header">
+                        <span class="kanban-title" style="color: #0284c7;">⚡ In Progress</span>
+                        <span class="badge-count" id="count-progress">0</span>
+                    </div>
+                    <div class="ticket-list" id="col-progress"></div>
+                </div>
+
+                <!-- Column 3: Reported Fixed (Amber Invariant) -->
+                <div class="kanban-col" id="col-drop-reported" style="border-color: #fcd34d;" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'REPORTED_FIXED')">
+                    <div class="kanban-header">
+                        <span class="kanban-title" style="color: #d97706;">⚠️ Reported Fixed</span>
+                        <span class="badge-count" id="count-reported" style="background: #fef3c7; color: #b45309;">0</span>
+                    </div>
+                    <div class="ticket-list" id="col-reported"></div>
+                </div>
+
+                <!-- Column 4: Verified Fixed (Green Invariant) -->
+                <div class="kanban-col" id="col-drop-verified" style="border-color: #a7f3d0;" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'VERIFIED_FIXED')">
+                    <div class="kanban-header">
+                        <span class="kanban-title" style="color: #059669;">✅ Verified Fixed</span>
+                        <span class="badge-count" id="count-verified" style="background: #d1fae5; color: #047857;">0</span>
+                    </div>
+                    <div class="ticket-list" id="col-verified"></div>
+                </div>
+
+            </div>
+
+            <!-- Alternative Table View -->
+            <div class="list-view-container" id="tableViewContainer">
+                <table class="fixit-table">
+                    <thead>
+                        <tr>
+                            <th>Ticket ID</th>
+                            <th>Priority Band</th>
+                            <th>Issue Title</th>
+                            <th>Campus Space</th>
+                            <th>Category</th>
+                            <th>Status State</th>
+                            <th>Assigned Worker</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ticketsTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ==========================================================================
+             TAB 2: SUBMIT REQUEST & LIVE PRIORITY CALCULATOR
+             ========================================================================== -->
+        <section class="tab-pane" id="tab-submit">
+            <div class="form-layout">
+                <div class="panel">
+                    <div class="panel-header-row">
+                        <h2 class="panel-title">📝 New Maintenance Request</h2>
+                        <div class="preset-buttons">
+                            <span style="font-size: 0.72rem; color: var(--text-muted); align-self: center;">Presets:</span>
+                            <button type="button" class="btn-preset" onclick="loadPreset('flood')">🧪 Lab Flood (P1)</button>
+                            <button type="button" class="btn-preset" onclick="loadPreset('kitchen')">⚡ Mess Power (P1)</button>
+                            <button type="button" class="btn-preset" onclick="loadPreset('light')">💡 Light Flicker (P3)</button>
+                            <button type="button" class="btn-preset" onclick="loadPreset('window')">🪟 Window Latch (P4)</button>
+                        </div>
+                    </div>
+
+                    <form id="newRequestForm" onsubmit="handleNewTicket(event)">
+                        <div class="form-group">
+                            <label class="form-label">Issue Title</label>
+                            <input type="text" class="form-input" id="reqTitle" placeholder="e.g. Major pipe burst flooding corridor near lab 204" required>
+                        </div>
+
+                        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <label class="form-label">Campus Facility</label>
+                                <select class="form-select" id="reqBuilding" onchange="updateScorePreview()">
+                                    <option value="Hostel Block A">Hostel Block A (Dormitory)</option>
+                                    <option value="Hostel Block B">Hostel Block B (Dormitory)</option>
+                                    <option value="Main Academic Complex">Main Academic Complex</option>
+                                    <option value="Central Campus Mess" data-critical="true">Central Campus Mess ⚠️</option>
+                                    <option value="Campus Health Center" data-critical="true">Campus Health Center ⚠️</option>
+                                    <option value="Central Laboratories" data-critical="true">Central Laboratories ⚠️</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Room or Space</label>
+                                <input type="text" class="form-input" id="reqRoom" placeholder="Room 204 or Ground Mess Hall" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <label class="form-label">Category</label>
+                                <select class="form-select" id="reqCategory">
+                                    <option value="Plumbing">Plumbing</option>
+                                    <option value="Electrical">Electrical</option>
+                                    <option value="HVAC / Cooling">HVAC / Cooling</option>
+                                    <option value="Carpentry">Carpentry & Locks</option>
+                                    <option value="Masonry">Civil / Masonry</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Base Severity</label>
+                                <select class="form-select" id="reqSeverity" onchange="updateScorePreview()">
+                                    <option value="minor">Minor (Aesthetic nuisance, +10 pts)</option>
+                                    <option value="moderate" selected>Moderate (Normal breakdown, +25 pts)</option>
+                                    <option value="major">Major (Core fixture unusable, +40 pts)</option>
+                                    <option value="critical">Critical (Severe hazard / structural, +50 pts)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <label class="checkbox-group">
+                                <input type="checkbox" id="reqSafety" onchange="updateScorePreview()">
+                                <span style="font-size: 0.85rem; font-weight: 700; color: #dc2626;">⚠️ Immediate Safety Hazard (+30)</span>
+                            </label>
+                            <div>
+                                <label class="form-label">Extra Residents Affected (+5 each, max 15)</label>
+                                <input type="number" class="form-input" id="reqExtraPeople" min="0" max="10" value="0" oninput="updateScorePreview()">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Detailed Description & Symptoms</label>
+                            <textarea class="form-textarea" id="reqDesc" placeholder="Describe the problem, when it started, and any immediate actions taken..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-submit">
+                            <span>🚀 Dispatch Maintenance Request</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Priority Engine Widget -->
+                <div class="score-widget">
+                    <h3 style="font-size: 0.95rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 1rem; color: #2563eb;">
+                        Deterministic Priority Engine
+                    </h3>
+
+                    <div class="gauge-wrapper">
+                        <svg class="gauge-svg" viewBox="0 0 160 160">
+                            <circle class="gauge-bg" cx="80" cy="80" r="70"></circle>
+                            <circle class="gauge-bar" id="gaugeBar" cx="80" cy="80" r="70"></circle>
+                        </svg>
+                        <div class="gauge-center-text">
+                            <span class="score-num" id="calcScoreVal">25</span>
+                            <span class="score-max">/ 100</span>
+                        </div>
+                    </div>
+
+                    <div class="score-band-pill band-P3" id="calcBandPill">P3 • MEDIUM</div>
+                    <div class="score-sla-info">
+                        Target Resolution SLA: <strong id="calcSlaVal">72 Hours</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+                            Deadline based on clock: <span id="calcDeadlineVal" style="color: #2563eb; font-weight: 700;">2026-10-19 16:32</span>
+                        </div>
+                    </div>
+
+                    <div class="score-breakdown">
+                        <div class="breakdown-row">
+                            <span>Base Severity Weight:</span>
+                            <strong id="ptsSeverity">+25</strong>
+                        </div>
+                        <div class="breakdown-row">
+                            <span>Safety Hazard Bonus:</span>
+                            <strong id="ptsSafety" style="color: #dc2626;">+0</strong>
+                        </div>
+                        <div class="breakdown-row">
+                            <span>Affected Residents:</span>
+                            <strong id="ptsAffected">+0</strong>
+                        </div>
+                        <div class="breakdown-row">
+                            <span>Critical Facility Bonus:</span>
+                            <strong id="ptsLocation">+0</strong>
+                        </div>
+                        <div class="breakdown-row total">
+                            <span>Composite Score:</span>
+                            <span id="ptsTotal" style="color: #2563eb;">25 / 100</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================================
+             TAB 3: COMPLETION CODE VERIFICATION
+             ========================================================================== -->
+        <section class="tab-pane" id="tab-verify">
+            <div class="verify-card">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <div style="font-size: 2.8rem; margin-bottom: 0.5rem;">🔐</div>
+                    <h2 class="panel-title" style="justify-content: center; font-size: 1.35rem; margin-bottom: 0.35rem;">
+                        Resident On-Site Verification
+                    </h2>
+                    <p style="font-size: 0.88rem; color: var(--text-secondary); max-width: 480px; margin: 0 auto;">
+                        Technicians cannot verify their own work or claim payout until the resident gives them this 6-digit confirmation code.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Select Ticket Awaiting Resident Confirmation</label>
+                    <select class="form-select" id="verifySelectTicket" onchange="loadTicketVerificationDetails()"></select>
+                </div>
+
+                <div id="verifyDetailsBox" style="background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.25rem;">
+                    <div style="font-size: 0.88rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-secondary);">Requester:</span>
+                        <strong id="vReqUser">rita_student (Room 302)</strong>
+                    </div>
+                    <div style="font-size: 0.88rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-secondary);">Technician:</span>
+                        <strong id="vTechUser">Tom Technician</strong>
+                    </div>
+                    <div style="font-size: 0.88rem; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--text-secondary);">On-Site Completion Code:</span>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <code style="font-size: 1.3rem; color: #0284c7; font-weight: 800; font-family: var(--font-mono); background: #e0f2fe; padding: 0.2rem 0.6rem; border-radius: 4px;" id="vTargetCode">849201</code>
+                            <button type="button" class="btn-preset" onclick="fillTargetCode()" title="Quick Auto-Fill Code for Demo">📋 Insert Code</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
+                        Enter 6-Digit PIN
+                    </span>
+                </div>
+                <div class="pin-inputs-row" id="pinInputsRow">
+                    <input type="text" maxlength="1" class="pin-input" id="pin0" oninput="handlePinInput(0)" onkeydown="handlePinKey(0, event)" onpaste="handlePinPaste(event)">
+                    <input type="text" maxlength="1" class="pin-input" id="pin1" oninput="handlePinInput(1)" onkeydown="handlePinKey(1, event)" onpaste="handlePinPaste(event)">
+                    <input type="text" maxlength="1" class="pin-input" id="pin2" oninput="handlePinInput(2)" onkeydown="handlePinKey(2, event)" onpaste="handlePinPaste(event)">
+                    <span style="align-self: center; font-size: 1.5rem; color: var(--text-muted);">&ndash;</span>
+                    <input type="text" maxlength="1" class="pin-input" id="pin3" oninput="handlePinInput(3)" onkeydown="handlePinKey(3, event)" onpaste="handlePinPaste(event)">
+                    <input type="text" maxlength="1" class="pin-input" id="pin4" oninput="handlePinInput(4)" onkeydown="handlePinKey(4, event)" onpaste="handlePinPaste(event)">
+                    <input type="text" maxlength="1" class="pin-input" id="pin5" oninput="handlePinInput(5)" onkeydown="handlePinKey(5, event)" onpaste="handlePinPaste(event)">
+                </div>
+
+                <div class="verify-checklist">
+                    <label>
+                        <input type="checkbox" id="chkInspected" checked>
+                        <span>Resident verified physical fixtures repaired and functioning properly</span>
+                    </label>
+                    <label>
+                        <input type="checkbox" id="chkCleaned" checked>
+                        <span>Technician restored cleanliness and safety to the room/space</span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 0.85rem;">
+                    <button class="btn-submit" style="margin-top: 0; background: #059669; color: #ffffff;" onclick="submitCodeVerification()">
+                        ✅ Verify Repair & Authorize Payout
+                    </button>
+                    <button class="btn-submit" style="margin-top: 0; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;" onclick="reopenTicketAction()">
+                        ❌ Issue Persists (Reopen)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================================
+             TAB 4: WORKER LOCATOR & LIVE PAYOUT TRACKER
+             ========================================================================== -->
+        <section class="tab-pane" id="tab-workers">
+            <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 class="panel-title">📍 Campus Worker Locator & Earnings</h2>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                        Technicians earn $25 base + material cost per <strong>confirmed fix</strong>.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <span class="brand-tag"><span class="pulse-dot"></span> 5 Field Technicians Online</span>
+                </div>
+            </div>
+
+            <div class="worker-roster-grid" id="workerRosterContainer"></div>
+        </section>
+
+        <!-- ==========================================================================
+             TAB 5: ARCHITECTURE SPECS & INVARIANTS
+             ========================================================================== -->
+        <section class="tab-pane" id="tab-specs">
+            <div class="specs-grid">
+                <div class="panel">
+                    <h3 class="panel-title">🛡️ Core FixIt Invariants Matrix</h3>
+                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 1rem; font-size: 0.88rem; margin-top: 1rem;">
+                        <li style="display: flex; gap: 0.75rem;">
+                            <span style="font-size: 1.25rem;">🟢</span>
+                            <div>
+                                <strong>Single Green State Invariant:</strong>
+                                <div style="color: var(--text-secondary); margin-top: 0.2rem;">
+                                    Only <code>VERIFIED_FIXED</code> is rendered Green. <code>REPORTED_FIXED</code> is strictly rendered Amber with warning cues.
+                                </div>
+                            </div>
+                        </li>
+                        <li style="display: flex; gap: 0.75rem;">
+                            <span style="font-size: 1.25rem;">⏱️</span>
+                            <div>
+                                <strong>Sole Time Authority:</strong>
+                                <div style="color: var(--text-secondary); margin-top: 0.2rem;">
+                                    Every timestamp and SLA calculation is governed by <code>apps.core.clock.now()</code>. Direct <code>datetime.now()</code> is statically forbidden.
+                                </div>
+                            </div>
+                        </li>
+                        <li style="display: flex; gap: 0.75rem;">
+                            <span style="font-size: 1.25rem;">🔒</span>
+                            <div>
+                                <strong>Anti-IDOR Enumeration:</strong>
+                                <div style="color: var(--text-secondary); margin-top: 0.2rem;">
+                                    Unauthorized requests to other residents' tickets return <code>404 Not Found</code> rather than <code>403</code> to prevent ID probing.
+                                </div>
+                            </div>
+                        </li>
+                        <li style="display: flex; gap: 0.75rem;">
+                            <span style="font-size: 1.25rem;">📦</span>
+                            <div>
+                                <strong>Zero-CDN Offline Independence:</strong>
+                                <div style="color: var(--text-secondary); margin-top: 0.2rem;">
+                                    WhiteNoise serves locally vendored Bootstrap 5 & HTMX. The entire campus application functions without internet egress.
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="state-flow-box">
+                        <div style="font-size: 0.78rem; font-weight: 800; color: #2563eb; text-transform: uppercase;">
+                            Finite State Machine Lifecycle
+                        </div>
+                        <div class="state-stepper">
+                            <div class="state-step active">
+                                <div class="step-circle">1</div>
+                                <span>Submitted</span>
+                            </div>
+                            <span style="color: var(--text-muted);">➔</span>
+                            <div class="state-step active">
+                                <div class="step-circle">2</div>
+                                <span>In Progress</span>
+                            </div>
+                            <span style="color: var(--text-muted);">➔</span>
+                            <div class="state-step amber">
+                                <div class="step-circle">3</div>
+                                <span>Reported Fixed</span>
+                            </div>
+                            <span style="color: var(--text-muted);">➔</span>
+                            <div class="state-step green">
+                                <div class="step-circle">4</div>
+                                <span>Verified Fixed</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3 class="panel-title">📊 Priority Bands & Resolution SLAs</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 1rem;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted); text-align: left;">
+                                <th style="padding: 0.5rem 0;">Band</th>
+                                <th style="padding: 0.5rem 0;">Score</th>
+                                <th style="padding: 0.5rem 0;">Resolution SLA</th>
+                                <th style="padding: 0.5rem 0;">Escalation Trigger</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 0.65rem 0;"><span class="band-badge band-P1">🚨 P1 Critical</span></td>
+                                <td>75 – 100</td>
+                                <td style="color: #b91c1c; font-weight: 700;">4 Hours</td>
+                                <td style="color: var(--text-secondary);">Auto-SMS to Warden</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 0.65rem 0;"><span class="band-badge band-P2">⚡ P2 High</span></td>
+                                <td>55 – 74</td>
+                                <td style="color: #b45309; font-weight: 700;">24 Hours</td>
+                                <td style="color: var(--text-secondary);">Worker Reminder at 12h</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 0.65rem 0;"><span class="band-badge band-P3">🔷 P3 Medium</span></td>
+                                <td>30 – 54</td>
+                                <td style="color: #1d4ed8; font-weight: 700;">72 Hours</td>
+                                <td style="color: var(--text-secondary);">Daily Triage Digest</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.65rem 0;"><span class="band-badge band-P4">🟢 P4 Low</span></td>
+                                <td>0 – 29</td>
+                                <td style="color: #475569; font-weight: 700;">7 Days (168h)</td>
+                                <td style="color: var(--text-secondary);">Scheduled Weekly Batch</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top: 1.5rem; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-md); padding: 1rem;">
+                        <h4 style="font-size: 0.85rem; color: #1d4ed8; margin-bottom: 0.35rem;">72-Hour Auto-Close Safety Net:</h4>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);">
+                            If a resident forgets to confirm within 72 hours of work being reported fixed, FixIt sends reminders at 24h & 48h, and auto-verifies at 72h.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Ticket Detail Modal -->
+    <div class="modal-overlay" id="ticketModal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toastNotice">
+        <span style="font-size: 1.6rem;" id="toastIcon">🎉</span>
+        <div>
+            <div style="font-weight: 800; font-size: 0.95rem;" id="toastTitle">Ticket Verified Fixed!</div>
+            <div style="font-size: 0.8rem; opacity: 0.9;" id="toastMsg">Resident confirmation verified successfully.</div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div>
+            FixIt Campus Maintenance Platform &bull; Built with Django 5.2, HTMX & Bootstrap 5
+        </div>
+        <div>
+            <a href="http://127.0.0.1:8000/" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 700;">
+                Django Dev Server: http://127.0.0.1:8000
+            </a>
+            <span style="margin: 0 0.5rem; opacity: 0.4;">|</span>
+            <span>Version 1.0.0-mvp</span>
+        </div>
+    </footer>
+
+    <!-- ==========================================================================
+         Client Engine — State, Interactive Algorithms & Audio Synth
+         ========================================================================== -->
+    <script>
+        // Bulletproof Date Helper
+        function makeDate(year, month, day, hour, min) {
+            return new Date(year, month - 1, day, hour, min, 0);
+        }
+
+        // State Store
+        let currentRole = 'requester';
+        let simulatedTime = makeDate(2026, 10, 16, 16, 32);
+        let currentFilterPriority = 'ALL';
+        let currentFilterStatus = 'ALL';
+        let currentSearchQuery = '';
+        let isTableView = false;
+        let isAudioEnabled = true;
+        let draggedTicketId = null;
+
+        // Workers Data
+        let workers = [
+            { id: 'W-01', name: 'Tom Technician', trade: 'Electrician & HVAC', area: 'Hostel Block A', status: 'avail', rating: 4.9, fixes: 28, balance: 700 },
+            { id: 'W-02', name: 'Ramesh Tech', trade: 'Senior Plumber', area: 'Central Laboratories', status: 'busy', rating: 4.8, fixes: 21, balance: 525 },
+            { id: 'W-03', name: 'Suresh Kumar', trade: 'Mess Equipment & Electrical', area: 'Central Campus Mess', status: 'avail', rating: 4.7, fixes: 34, balance: 850 },
+            { id: 'W-04', name: 'Anita Sharma', trade: 'Civil, Glass & Masonry', area: 'Academic Complex', status: 'avail', rating: 4.9, fixes: 16, balance: 400 },
+            { id: 'W-05', name: 'Vikram Singh', trade: 'Carpentry & Master Locks', area: 'Hostel Block B', status: 'off', rating: 4.6, fixes: 19, balance: 475 }
+        ];
+
+        // Seed Tickets Data
+        let tickets = [
+            {
+                id: 'FIX-101',
+                title: 'Flooding in 2nd Floor Chemistry Laboratory',
+                facility: 'Central Laboratories',
+                room: 'Lab 204',
+                category: 'Plumbing',
+                severity: 'critical',
+                safety: true,
+                score: 90,
+                band: 'P1',
+                slaHours: 4,
+                status: 'IN_PROGRESS',
+                statusColor: 'blue',
+                statusLabel: 'In Progress',
+                requester: 'Dr. Sharma',
+                technician: 'Tom Technician',
+                code: '719342',
+                created: '2026-10-16 14:10',
+                createdDate: makeDate(2026, 10, 16, 14, 10),
+                notes: 'Primary intake valve leaking near server rack.'
+            },
+            {
+                id: 'FIX-102',
+                title: 'Main Dining Hall Dishwasher Power Surge',
+                facility: 'Central Campus Mess',
+                room: 'Dish Area',
+                category: 'Electrical',
+                severity: 'major',
+                safety: true,
+                score: 80,
+                band: 'P1',
+                slaHours: 4,
+                status: 'SUBMITTED',
+                statusColor: 'blue',
+                statusLabel: 'Submitted',
+                requester: 'Mess Manager',
+                technician: null,
+                code: '458129',
+                created: '2026-10-16 15:45',
+                createdDate: makeDate(2026, 10, 16, 15, 45),
+                notes: 'Sparking noticed at primary 3-phase switchboard.'
+            },
+            {
+                id: 'FIX-103',
+                title: 'Corridor Light Flicker Block A 3rd Floor',
+                facility: 'Hostel Block A',
+                room: 'Wing 3 Corridor',
+                category: 'Electrical',
+                severity: 'moderate',
+                safety: false,
+                score: 35,
+                band: 'P3',
+                slaHours: 72,
+                status: 'REPORTED_FIXED',
+                statusColor: 'amber',
+                statusLabel: 'Reported Fixed (Awaiting Resident)',
+                requester: 'rita_student',
+                technician: 'Tom Technician',
+                code: '849201',
+                created: '2026-10-15 09:20',
+                createdDate: makeDate(2026, 10, 15, 9, 20),
+                notes: 'Ballast unit replaced by Tom. Resident confirmation pending.'
+            },
+            {
+                id: 'FIX-104',
+                title: 'Clinic Water Dispenser Pressure Low',
+                facility: 'Campus Health Center',
+                room: 'Waiting Room',
+                category: 'Plumbing',
+                severity: 'minor',
+                safety: false,
+                score: 20,
+                band: 'P4',
+                slaHours: 168,
+                status: 'REPORTED_FIXED',
+                statusColor: 'amber',
+                statusLabel: 'Reported Fixed (Awaiting Resident)',
+                requester: 'Nurse Joy',
+                technician: 'Ramesh Tech',
+                code: '631245',
+                created: '2026-10-15 11:30',
+                createdDate: makeDate(2026, 10, 15, 11, 30),
+                notes: 'Filter flushed and cleaned.'
+            },
+            {
+                id: 'FIX-105',
+                title: 'Dorm Room 108 Window Latch Replacement',
+                facility: 'Hostel Block B',
+                room: 'Room 108',
+                category: 'Carpentry',
+                severity: 'minor',
+                safety: false,
+                score: 10,
+                band: 'P4',
+                slaHours: 168,
+                status: 'VERIFIED_FIXED',
+                statusColor: 'green',
+                statusLabel: 'Confirmed Fixed (Code #938102)',
+                requester: 'Amit Student',
+                technician: 'Tom Technician',
+                code: '938102',
+                created: '2026-10-14 10:00',
+                createdDate: makeDate(2026, 10, 14, 10, 0),
+                notes: 'Fixed and verified by Amit on site.'
+            },
+            {
+                id: 'FIX-106',
+                title: 'Academic Block 4th Floor AC Vent Cleaning',
+                facility: 'Main Academic Complex',
+                room: 'Lecture Hall 401',
+                category: 'HVAC / Cooling',
+                severity: 'moderate',
+                safety: false,
+                score: 25,
+                band: 'P3',
+                slaHours: 72,
+                status: 'VERIFIED_FIXED',
+                statusColor: 'green',
+                statusLabel: 'Confirmed Fixed (Code #112940)',
+                requester: 'Prof. Rao',
+                technician: 'Suresh Kumar',
+                code: '112940',
+                created: '2026-10-13 14:00',
+                createdDate: makeDate(2026, 10, 13, 14, 0),
+                notes: 'Duct filter scrubbed clean.'
+            }
+        ];
+
+        // Format Date Helper
+        function formatClock(date) {
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
+        // ==========================================================================
+        // Safe Synthesized Web Audio API
+        // ==========================================================================
+        let audioCtx = null;
+        function playSfx(type) {
+            if (!isAudioEnabled) return;
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                if (!audioCtx) audioCtx = new AudioContext();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(650, now);
+                    osc.frequency.exponentialRampToValueAtTime(320, now + 0.05);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'clock') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(850, now);
+                    gain.gain.setValueAtTime(0.06, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                    osc.start(now);
+                    osc.stop(now + 0.04);
+                } else if (type === 'success') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(660, now + 0.08);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.setValueAtTime(140, now + 0.1);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'fanfare') {
+                    [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.type = 'sine';
+                        o.frequency.value = freq;
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        g.gain.setValueAtTime(0.08, now + i * 0.07);
+                        g.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                        o.start(now + i * 0.07);
+                        o.stop(now + 0.55);
+                    });
+                }
+            } catch (e) {
+                // Audio safely muted on error
+            }
+        }
+
+        function toggleAudio() {
+            isAudioEnabled = !isAudioEnabled;
+            document.getElementById('btnAudioToggle').textContent = isAudioEnabled ? '🔊' : '🔇';
+            showToast('Sound Effects', isAudioEnabled ? 'Audio cues enabled.' : 'Audio muted.');
+            if (isAudioEnabled) playSfx('click');
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'light';
+            const next = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            document.getElementById('btnThemeToggle').textContent = next === 'light' ? '☀️' : '🌙';
+            playSfx('click');
+            showToast('Theme Updated', `Switched to ${next.toUpperCase()} theme.`);
+        }
+
+        // ==========================================================================
+        // Clock Engine
+        // ==========================================================================
+        function advanceClock(hours) {
+            simulatedTime = new Date(simulatedTime.getTime() + hours * 3600 * 1000);
+            document.getElementById('simulatedClock').textContent = formatClock(simulatedTime);
+            playSfx('clock');
+            updateScorePreview();
+            renderBoard();
+            showToast('Clock Advanced', `Simulated time is now ${formatClock(simulatedTime)}`);
+        }
+
+        function resetClock() {
+            simulatedTime = makeDate(2026, 10, 16, 16, 32);
+            document.getElementById('simulatedClock').textContent = formatClock(simulatedTime);
+            playSfx('clock');
+            updateScorePreview();
+            renderBoard();
+            showToast('Clock Reset', 'Simulated demo clock returned to baseline.');
+        }
+
+        // ==========================================================================
+        // Role Switcher
+        // ==========================================================================
+        function setRole(role) {
+            currentRole = role;
+            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+            const target = document.getElementById('role' + role.charAt(0).toUpperCase() + role.slice(1));
+            if (target) target.classList.add('active');
+            playSfx('click');
+            renderBoard();
+            showToast('Role Switched', `Now operating as: ${role.toUpperCase()}`);
+        }
+
+        // ==========================================================================
+        // Tab Navigation
+        // ==========================================================================
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            
+            const targetBtn = document.getElementById('tabNav-' + tabId);
+            if (targetBtn) targetBtn.classList.add('active');
+            
+            const targetPane = document.getElementById('tab-' + tabId);
+            if (targetPane) targetPane.classList.add('active');
+
+            const boardBar = document.getElementById('boardControlsBar');
+            if (boardBar) boardBar.style.display = (tabId === 'board') ? 'flex' : 'none';
+
+            playSfx('click');
+
+            if (tabId === 'verify') populateVerifyDropdown();
+            if (tabId === 'workers') renderWorkers();
+        }
+
+        // ==========================================================================
+        // Dynamic SLA Status
+        // ==========================================================================
+        function getSlaStatus(ticket) {
+            if (ticket.status === 'VERIFIED_FIXED') {
+                return { text: '✓ Fixed within SLA', class: '' };
+            }
+            const deadline = new Date(ticket.createdDate.getTime() + ticket.slaHours * 3600 * 1000);
+            const diffMs = deadline.getTime() - simulatedTime.getTime();
+            const diffHrs = diffMs / (1000 * 3600);
+
+            if (diffHrs < 0) {
+                const overdueHrs = Math.abs(Math.floor(diffHrs));
+                return { text: `🚨 Overdue by ${overdueHrs}h`, class: 'overdue' };
+            } else if (diffHrs <= ticket.slaHours * 0.25) {
+                return { text: `⚠️ ${diffHrs.toFixed(1)}h remaining`, class: 'warning' };
+            } else {
+                return { text: `⏱️ ${diffHrs.toFixed(1)}h remaining`, class: '' };
+            }
+        }
+
+        // ==========================================================================
+        // Render Kanban & Table Board
+        // ==========================================================================
+        function renderBoard() {
+            const cols = {
+                submitted: document.getElementById('col-submitted'),
+                progress: document.getElementById('col-progress'),
+                reported: document.getElementById('col-reported'),
+                verified: document.getElementById('col-verified')
+            };
+
+            Object.values(cols).forEach(c => { if (c) c.innerHTML = ''; });
+            const tableBody = document.getElementById('ticketsTableBody');
+            if (tableBody) tableBody.innerHTML = '';
+
+            let counts = { submitted: 0, progress: 0, reported: 0, verified: 0 };
+
+            let filtered = tickets.filter(t => {
+                if (currentFilterPriority !== 'ALL' && t.band !== currentFilterPriority) return false;
+                if (currentFilterStatus !== 'ALL' && t.status !== currentFilterStatus) return false;
+                if (currentSearchQuery) {
+                    const q = currentSearchQuery.toLowerCase();
+                    const match = t.id.toLowerCase().includes(q) ||
+                                  t.title.toLowerCase().includes(q) ||
+                                  t.facility.toLowerCase().includes(q) ||
+                                  t.room.toLowerCase().includes(q) ||
+                                  t.category.toLowerCase().includes(q);
+                    if (!match) return false;
+                }
+                return true;
+            });
+
+            filtered.forEach(ticket => {
+                let colKey = 'submitted';
+                if (ticket.status === 'IN_PROGRESS') colKey = 'progress';
+                else if (ticket.status === 'REPORTED_FIXED') colKey = 'reported';
+                else if (ticket.status === 'VERIFIED_FIXED') colKey = 'verified';
+
+                counts[colKey]++;
+
+                const slaInfo = getSlaStatus(ticket);
+
+                // Card Element
+                const card = document.createElement('div');
+                card.className = 'ticket-card';
+                card.draggable = true;
+                card.ondragstart = (e) => handleDragStart(e, ticket.id);
+                card.ondragend = (e) => handleDragEnd(e);
+                card.onclick = () => openTicketModal(ticket.id);
+
+                let actionHtml = '';
+                if (ticket.status === 'REPORTED_FIXED') {
+                    actionHtml = `
+                        <div class="verify-action-box" onclick="event.stopPropagation()">
+                            <span style="font-size: 0.78rem; color: #b45309; font-weight: 700;">Code: <strong>${ticket.code}</strong></span>
+                            <button class="btn-confirm-fix" onclick="quickVerify('${ticket.id}')">Resident Confirm</button>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="ticket-top">
+                        <span class="ticket-id">🏷️ ${ticket.id}</span>
+                        <span class="band-badge band-${ticket.band}">${ticket.band} &bull; ${ticket.slaHours}h SLA</span>
+                    </div>
+                    <div class="ticket-title">${ticket.title}</div>
+                    <div class="ticket-location">📍 ${ticket.facility} &bull; ${ticket.room}</div>
+                    <div class="sla-countdown-pill ${slaInfo.class}">${slaInfo.text}</div>
+                    <div class="ticket-meta">
+                        <span class="status-pill ${ticket.statusColor}">
+                            ● ${ticket.statusLabel}
+                        </span>
+                        <span style="color: var(--text-muted); font-weight: 600;">${ticket.category}</span>
+                    </div>
+                    ${actionHtml}
+                `;
+
+                if (cols[colKey]) cols[colKey].appendChild(card);
+
+                // Table Row
+                if (tableBody) {
+                    const tr = document.createElement('tr');
+                    tr.onclick = () => openTicketModal(ticket.id);
+                    tr.innerHTML = `
+                        <td><strong style="color: #2563eb; font-family: var(--font-mono);">${ticket.id}</strong></td>
+                        <td><span class="band-badge band-${ticket.band}">${ticket.band} (${ticket.slaHours}h)</span></td>
+                        <td><strong>${ticket.title}</strong></td>
+                        <td>${ticket.facility} (${ticket.room})</td>
+                        <td>${ticket.category}</td>
+                        <td><span class="status-pill ${ticket.statusColor}">● ${ticket.statusLabel}</span></td>
+                        <td>${ticket.technician || '<span style="color: var(--text-muted);">Unassigned</span>'}</td>
+                        <td><button class="btn-preset" onclick="event.stopPropagation(); openTicketModal('${ticket.id}')">Details</button></td>
+                    `;
+                    tableBody.appendChild(tr);
+                }
+            });
+
+            // Empty state handling
+            Object.keys(cols).forEach(key => {
+                if (cols[key] && cols[key].children.length === 0) {
+                    cols[key].innerHTML = `
+                        <div class="empty-col-state">
+                            <span style="font-size: 1.5rem; opacity: 0.5;">📭</span>
+                            <span>No tickets in this column</span>
+                        </div>
+                    `;
+                }
+            });
+
+            // Update Counts
+            const cSub = document.getElementById('count-submitted');
+            const cProg = document.getElementById('count-progress');
+            const cRep = document.getElementById('count-reported');
+            const cVer = document.getElementById('count-verified');
+
+            if (cSub) cSub.textContent = counts.submitted;
+            if (cProg) cProg.textContent = counts.progress;
+            if (cRep) cRep.textContent = counts.reported;
+            if (cVer) cVer.textContent = counts.verified;
+
+            const mTot = document.getElementById('metricTotal');
+            const mAmber = document.getElementById('metricAmber');
+            const mGreen = document.getElementById('metricGreen');
+
+            if (mTot) mTot.textContent = tickets.length;
+            if (mAmber) mAmber.textContent = counts.reported;
+            if (mGreen) mGreen.textContent = counts.verified;
+        }
+
+        // ==========================================================================
+        // Drag & Drop
+        // ==========================================================================
+        function handleDragStart(e, id) {
+            draggedTicketId = id;
+            if (e.target) e.target.classList.add('dragging');
+            if (e.dataTransfer) e.dataTransfer.setData('text/plain', id);
+        }
+
+        function handleDragEnd(e) {
+            if (e.target) e.target.classList.remove('dragging');
+            document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            if (e.currentTarget) e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            if (e.currentTarget) e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e, targetStatus) {
+            e.preventDefault();
+            if (e.currentTarget) e.currentTarget.classList.remove('drag-over');
+            if (!draggedTicketId) return;
+
+            const ticket = tickets.find(t => t.id === draggedTicketId);
+            if (!ticket) return;
+
+            if (targetStatus === 'VERIFIED_FIXED') {
+                switchTab('verify');
+                const sel = document.getElementById('verifySelectTicket');
+                if (sel) {
+                    sel.value = ticket.id;
+                    loadTicketVerificationDetails();
+                }
+                showToast('Verification Required', 'Please enter resident 6-digit code to complete.');
+            } else if (targetStatus === 'REPORTED_FIXED') {
+                transitionTicket(ticket.id, 'REPORTED_FIXED', 'amber', 'Reported Fixed (Awaiting Resident)');
+            } else if (targetStatus === 'IN_PROGRESS') {
+                transitionTicket(ticket.id, 'IN_PROGRESS', 'blue', 'In Progress');
+            } else {
+                transitionTicket(ticket.id, 'SUBMITTED', 'blue', 'Submitted');
+            }
+
+            draggedTicketId = null;
+        }
+
+        // ==========================================================================
+        // Board Filtering
+        // ==========================================================================
+        function setPriorityFilter(band, btn) {
+            currentFilterPriority = band;
+            document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            playSfx('click');
+            renderBoard();
+        }
+
+        function filterBoardByStatus(status) {
+            currentFilterStatus = status;
+            switchTab('board');
+            renderBoard();
+        }
+
+        function handleBoardSearch() {
+            const input = document.getElementById('boardSearchInput');
+            currentSearchQuery = input ? input.value.trim() : '';
+            renderBoard();
+        }
+
+        function toggleBoardView() {
+            isTableView = !isTableView;
+            const grid = document.getElementById('kanbanGridContainer');
+            const table = document.getElementById('tableViewContainer');
+            const icon = document.getElementById('viewModeIcon');
+            const txt = document.getElementById('viewModeText');
+
+            if (isTableView) {
+                if (grid) grid.style.display = 'none';
+                if (table) table.style.display = 'block';
+                if (icon) icon.textContent = '📋';
+                if (txt) txt.textContent = 'Kanban View';
+            } else {
+                if (grid) grid.style.display = 'grid';
+                if (table) table.style.display = 'none';
+                if (icon) icon.textContent = '📑';
+                if (txt) txt.textContent = 'Table View';
+            }
+            playSfx('click');
+        }
+
+        // ==========================================================================
+        // Live Priority Engine Calculation
+        // ==========================================================================
+        function updateScorePreview() {
+            const severityWeights = { minor: 10, moderate: 25, major: 40, critical: 50 };
+            const sevEl = document.getElementById('reqSeverity');
+            const sev = sevEl ? sevEl.value : 'moderate';
+            const sevPts = severityWeights[sev] || 25;
+
+            const safetyEl = document.getElementById('reqSafety');
+            const isSafety = safetyEl ? safetyEl.checked : false;
+            const safetyPts = isSafety ? 30 : 0;
+
+            const extraEl = document.getElementById('reqExtraPeople');
+            const extraPeople = extraEl ? parseInt(extraEl.value || 0, 10) : 0;
+            const affectedPts = Math.min(extraPeople * 5, 15);
+
+            const bldgSelect = document.getElementById('reqBuilding');
+            let locPts = 0;
+            if (bldgSelect && bldgSelect.selectedOptions && bldgSelect.selectedOptions[0]) {
+                const isCriticalLoc = bldgSelect.selectedOptions[0].getAttribute('data-critical') === 'true';
+                locPts = isCriticalLoc ? 10 : 0;
+            }
+
+            let total = sevPts + safetyPts + affectedPts + locPts;
+            total = Math.min(100, Math.max(0, total));
+
+            let band = 'P4', sla = '168 Hours (7 Days)', bandClass = 'band-P4', bandLabel = 'P4 • LOW', circleColor = '#94a3b8', slaHours = 168;
+
+            if (total >= 75) {
+                band = 'P1';
+                sla = '4 Hours (Emergency)';
+                slaHours = 4;
+                bandClass = 'band-P1';
+                bandLabel = '🚨 P1 • CRITICAL';
+                circleColor = '#dc2626';
+            } else if (total >= 55) {
+                band = 'P2';
+                sla = '24 Hours (Urgent)';
+                slaHours = 24;
+                bandClass = 'band-P2';
+                bandLabel = '⚡ P2 • HIGH';
+                circleColor = '#d97706';
+            } else if (total >= 30) {
+                band = 'P3';
+                sla = '72 Hours';
+                slaHours = 72;
+                bandClass = 'band-P3';
+                bandLabel = '🔷 P3 • MEDIUM';
+                circleColor = '#2563eb';
+            }
+
+            const circumference = 2 * Math.PI * 70; // ~440
+            const offset = circumference - (total / 100) * circumference;
+            const gaugeBar = document.getElementById('gaugeBar');
+            if (gaugeBar) {
+                gaugeBar.style.strokeDashoffset = offset;
+                gaugeBar.style.stroke = circleColor;
+            }
+
+            const scVal = document.getElementById('calcScoreVal');
+            const bp = document.getElementById('calcBandPill');
+            const slaVal = document.getElementById('calcSlaVal');
+            const deadVal = document.getElementById('calcDeadlineVal');
+
+            if (scVal) scVal.textContent = total;
+            if (bp) {
+                bp.className = 'score-band-pill ' + bandClass;
+                bp.textContent = bandLabel;
+            }
+            if (slaVal) slaVal.textContent = sla;
+
+            if (deadVal) {
+                const deadline = new Date(simulatedTime.getTime() + slaHours * 3600 * 1000);
+                deadVal.textContent = formatClock(deadline);
+            }
+
+            const pSev = document.getElementById('ptsSeverity');
+            const pSaf = document.getElementById('ptsSafety');
+            const pAff = document.getElementById('ptsAffected');
+            const pLoc = document.getElementById('ptsLocation');
+            const pTot = document.getElementById('ptsTotal');
+
+            if (pSev) pSev.textContent = '+' + sevPts;
+            if (pSaf) pSaf.textContent = '+' + safetyPts;
+            if (pAff) pAff.textContent = '+' + affectedPts;
+            if (pLoc) pLoc.textContent = '+' + locPts;
+            if (pTot) pTot.textContent = total + ' / 100';
+        }
+
+        // ==========================================================================
+        // 1-Click Form Presets
+        // ==========================================================================
+        function loadPreset(key) {
+            playSfx('click');
+            if (key === 'flood') {
+                document.getElementById('reqTitle').value = 'Chemical solvent pipe burst & floor flooding';
+                document.getElementById('reqBuilding').value = 'Central Laboratories';
+                document.getElementById('reqRoom').value = 'Lab 204 - Organic Synthesis';
+                document.getElementById('reqCategory').value = 'Plumbing';
+                document.getElementById('reqSeverity').value = 'critical';
+                document.getElementById('reqSafety').checked = true;
+                document.getElementById('reqExtraPeople').value = '3';
+                document.getElementById('reqDesc').value = 'Water spraying across electrical outlet conduits. Immediate shutoff needed.';
+            } else if (key === 'kitchen') {
+                document.getElementById('reqTitle').value = 'Main dining exhaust system & power breaker blown';
+                document.getElementById('reqBuilding').value = 'Central Campus Mess';
+                document.getElementById('reqRoom').value = 'Primary Mess Kitchen';
+                document.getElementById('reqCategory').value = 'Electrical';
+                document.getElementById('reqSeverity').value = 'major';
+                document.getElementById('reqSafety').checked = true;
+                document.getElementById('reqExtraPeople').value = '4';
+                document.getElementById('reqDesc').value = 'Exhaust hoods non-operational, smoke accumulating in student dining hall.';
+            } else if (key === 'light') {
+                document.getElementById('reqTitle').value = 'Corridor tube light buzzing and strobing';
+                document.getElementById('reqBuilding').value = 'Hostel Block A';
+                document.getElementById('reqRoom').value = 'Floor 3 East Wing';
+                document.getElementById('reqCategory').value = 'Electrical';
+                document.getElementById('reqSeverity').value = 'moderate';
+                document.getElementById('reqSafety').checked = false;
+                document.getElementById('reqExtraPeople').value = '1';
+                document.getElementById('reqDesc').value = 'Ballast unit flickers continuously after evening turn-on.';
+            } else if (key === 'window') {
+                document.getElementById('reqTitle').value = 'Window handle loose and rattling in wind';
+                document.getElementById('reqBuilding').value = 'Hostel Block B';
+                document.getElementById('reqRoom').value = 'Room 108';
+                document.getElementById('reqCategory').value = 'Carpentry';
+                document.getElementById('reqSeverity').value = 'minor';
+                document.getElementById('reqSafety').checked = false;
+                document.getElementById('reqExtraPeople').value = '0';
+                document.getElementById('reqDesc').value = 'Screws have stripped from frame, needs bracket tightening.';
+            }
+            updateScorePreview();
+        }
+
+        // ==========================================================================
+        // New Ticket Form Submission
+        // ==========================================================================
+        function handleNewTicket(e) {
+            e.preventDefault();
+
+            const title = document.getElementById('reqTitle').value;
+            const facility = document.getElementById('reqBuilding').value;
+            const room = document.getElementById('reqRoom').value;
+            const category = document.getElementById('reqCategory').value;
+            const severity = document.getElementById('reqSeverity').value;
+            const safety = document.getElementById('reqSafety').checked;
+            const desc = document.getElementById('reqDesc').value;
+
+            const score = parseInt(document.getElementById('calcScoreVal').textContent, 10);
+            let band = 'P4', sla = 168;
+            if (score >= 75) { band = 'P1'; sla = 4; }
+            else if (score >= 55) { band = 'P2'; sla = 24; }
+            else if (score >= 30) { band = 'P3'; sla = 72; }
+
+            const newId = 'FIX-' + (100 + tickets.length + 1);
+            const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+            tickets.unshift({
+                id: newId,
+                title: title,
+                facility: facility,
+                room: room,
+                category: category,
+                severity: severity,
+                safety: safety,
+                score: score,
+                band: band,
+                slaHours: sla,
+                status: 'SUBMITTED',
+                statusColor: 'blue',
+                statusLabel: 'Submitted',
+                requester: 'rita_student',
+                technician: null,
+                code: randomCode,
+                created: formatClock(simulatedTime),
+                createdDate: new Date(simulatedTime.getTime()),
+                notes: desc
+            });
+
+            playSfx('success');
+            renderBoard();
+            document.getElementById('newRequestForm').reset();
+            updateScorePreview();
+            switchTab('board');
+            showToast('Request Dispatched', `${newId} (${band} • ${sla}h SLA) dispatched.`);
+        }
+
+        // ==========================================================================
+        // PIN Boxes & Code Verification
+        // ==========================================================================
+        function handlePinInput(idx) {
+            playSfx('click');
+            const current = document.getElementById('pin' + idx);
+            if (current && current.value.length === 1 && idx < 5) {
+                const next = document.getElementById('pin' + (idx + 1));
+                if (next) next.focus();
+            }
+            updatePinFilledStyles();
+        }
+
+        function handlePinKey(idx, e) {
+            if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+                const prev = document.getElementById('pin' + (idx - 1));
+                if (prev) {
+                    prev.focus();
+                    prev.value = '';
+                }
+            }
+        }
+
+        function handlePinPaste(e) {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text').trim();
+            if (text) {
+                for (let i = 0; i < 6 && i < text.length; i++) {
+                    const box = document.getElementById('pin' + i);
+                    if (box) box.value = text[i];
+                }
+                updatePinFilledStyles();
+                playSfx('click');
+            }
+        }
+
+        function updatePinFilledStyles() {
+            for (let i = 0; i < 6; i++) {
+                const box = document.getElementById('pin' + i);
+                if (box) {
+                    if (box.value) box.classList.add('filled');
+                    else box.classList.remove('filled');
+                }
+            }
+        }
+
+        function getPinValue() {
+            let val = '';
+            for (let i = 0; i < 6; i++) {
+                const box = document.getElementById('pin' + i);
+                if (box) val += box.value;
+            }
+            return val.trim();
+        }
+
+        function clearPinBoxes() {
+            for (let i = 0; i < 6; i++) {
+                const box = document.getElementById('pin' + i);
+                if (box) box.value = '';
+            }
+            updatePinFilledStyles();
+        }
+
+        function fillTargetCode() {
+            const targetCode = document.getElementById('vTargetCode').textContent.trim();
+            if (targetCode && targetCode.length === 6) {
+                for (let i = 0; i < 6; i++) {
+                    const box = document.getElementById('pin' + i);
+                    if (box) box.value = targetCode[i];
+                }
+                updatePinFilledStyles();
+                playSfx('click');
+            }
+        }
+
+        function populateVerifyDropdown() {
+            const select = document.getElementById('verifySelectTicket');
+            if (!select) return;
+            select.innerHTML = '';
+            const amberTickets = tickets.filter(t => t.status === 'REPORTED_FIXED');
+
+            const box = document.getElementById('verifyDetailsBox');
+            if (amberTickets.length === 0) {
+                select.innerHTML = '<option value="">No tickets awaiting resident confirmation</option>';
+                if (box) box.style.display = 'none';
+                return;
+            }
+
+            if (box) box.style.display = 'block';
+            amberTickets.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = `${t.id} — ${t.title} (${t.facility})`;
+                select.appendChild(opt);
+            });
+
+            loadTicketVerificationDetails();
+        }
+
+        function loadTicketVerificationDetails() {
+            const select = document.getElementById('verifySelectTicket');
+            if (!select) return;
+            const id = select.value;
+            const ticket = tickets.find(t => t.id === id);
+            if (!ticket) return;
+
+            const rUser = document.getElementById('vReqUser');
+            const tUser = document.getElementById('vTechUser');
+            const tCode = document.getElementById('vTargetCode');
+
+            if (rUser) rUser.textContent = `${ticket.requester} (${ticket.room})`;
+            if (tUser) tUser.textContent = ticket.technician || 'Assigned Technician';
+            if (tCode) tCode.textContent = ticket.code;
+            clearPinBoxes();
+        }
+
+        function submitCodeVerification() {
+            const select = document.getElementById('verifySelectTicket');
+            if (!select || !select.value) {
+                alert('Please select a ticket awaiting resident confirmation.');
+                return;
+            }
+            const id = select.value;
+            const inputCode = getPinValue();
+            const ticket = tickets.find(t => t.id === id);
+
+            if (!ticket) return;
+
+            if (inputCode !== ticket.code) {
+                playSfx('error');
+                const row = document.getElementById('pinInputsRow');
+                if (row) {
+                    row.classList.add('shake');
+                    setTimeout(() => row.classList.remove('shake'), 500);
+                }
+                alert(`❌ Invalid Completion Code. You entered: "${inputCode}".\nPlease enter the exact 6-digit code shown on the resident's screen: ${ticket.code}`);
+                return;
+            }
+
+            ticket.status = 'VERIFIED_FIXED';
+            ticket.statusColor = 'green';
+            ticket.statusLabel = `Confirmed Fixed (Code #${ticket.code})`;
+
+            const worker = workers.find(w => w.name === ticket.technician);
+            if (worker) {
+                worker.fixes++;
+                worker.balance += 25;
+            }
+
+            playSfx('fanfare');
+            triggerConfetti();
+            renderBoard();
+            populateVerifyDropdown();
+            showToast('🎉 Repair Verified!', `${ticket.id} turned GREEN. Payout authorized!`);
+        }
+
+        function reopenTicketAction() {
+            const select = document.getElementById('verifySelectTicket');
+            if (!select || !select.value) return;
+            const id = select.value;
+            const ticket = tickets.find(t => t.id === id);
+            if (!ticket) return;
+
+            ticket.status = 'IN_PROGRESS';
+            ticket.statusColor = 'blue';
+            ticket.statusLabel = 'Reopened by Resident';
+
+            playSfx('error');
+            renderBoard();
+            populateVerifyDropdown();
+            showToast('Ticket Reopened', `${ticket.id} sent back to technician.`);
+        }
+
+        function quickVerify(ticketId) {
+            const ticket = tickets.find(t => t.id === ticketId);
+            if (!ticket) return;
+
+            ticket.status = 'VERIFIED_FIXED';
+            ticket.statusColor = 'green';
+            ticket.statusLabel = `Confirmed Fixed (Code #${ticket.code})`;
+
+            playSfx('fanfare');
+            triggerConfetti();
+            renderBoard();
+            showToast('Resident Confirmed!', `${ticket.id} confirmed fixed! Status is now GREEN.`);
+        }
+
+        // ==========================================================================
+        // Worker Roster
+        // ==========================================================================
+        function renderWorkers() {
+            const container = document.getElementById('workerRosterContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            workers.forEach(w => {
+                const statusClasses = {
+                    avail: { class: 'status-avail', badge: 'Available', color: '#059669' },
+                    busy: { class: 'status-busy', badge: 'Busy on Job', color: '#d97706' },
+                    off: { class: 'status-off', badge: 'Off Duty', color: '#94a3b8' }
+                };
+                const st = statusClasses[w.status] || statusClasses.avail;
+
+                const card = document.createElement('div');
+                card.className = `worker-card ${st.class}`;
+                card.innerHTML = `
+                    <div class="worker-top">
+                        <div class="worker-avatar">${w.name.charAt(0)}</div>
+                        <div class="worker-info">
+                            <div class="worker-name">${w.name}</div>
+                            <div class="worker-trade">${w.trade}</div>
+                        </div>
+                        <span class="status-pill" style="background: #f1f5f9; color: ${st.color}; font-size: 0.72rem; border: 1px solid #e2e8f0;">
+                            ● ${st.badge}
+                        </span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                        📍 Primary Assigned Area: <strong>${w.area}</strong>
+                    </div>
+                    <div class="worker-metrics-row">
+                        <span>Rating: ⭐ <strong>${w.rating}</strong></span>
+                        <span>Verified Fixes: <strong>${w.fixes}</strong></span>
+                        <span>Pending Payout: <strong style="color: #2563eb;">$${w.balance}</strong></span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ==========================================================================
+        // Modal & State Transitions
+        // ==========================================================================
+        function openTicketModal(ticketId) {
+            const ticket = tickets.find(t => t.id === ticketId);
+            if (!ticket) return;
+
+            playSfx('click');
+            const modal = document.getElementById('ticketModal');
+            const body = document.getElementById('modalBody');
+
+            let actionButtons = '';
+            if (ticket.status === 'SUBMITTED') {
+                actionButtons = `<button class="btn-submit" onclick="transitionTicket('${ticket.id}', 'IN_PROGRESS', 'blue', 'In Progress')">🛠️ Assign Tom Technician & Begin Work</button>`;
+            } else if (ticket.status === 'IN_PROGRESS') {
+                actionButtons = `<button class="btn-submit" style="background: #d97706; color: #ffffff;" onclick="transitionTicket('${ticket.id}', 'REPORTED_FIXED', 'amber', 'Reported Fixed (Awaiting Resident)')">⚠️ Report Work Complete (Turn Amber)</button>`;
+            } else if (ticket.status === 'REPORTED_FIXED') {
+                actionButtons = `<button class="btn-submit" style="background: #059669; color: #ffffff;" onclick="transitionTicket('${ticket.id}', 'VERIFIED_FIXED', 'green', 'Confirmed Fixed (Code #${ticket.code})')">✅ Resident Verify & Close (Code: ${ticket.code})</button>`;
+            }
+
+            body.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem;">
+                    <span style="font-size: 0.95rem; font-weight: 800; color: #2563eb; font-family: var(--font-mono);">${ticket.id}</span>
+                    <span class="band-badge band-${ticket.band}">${ticket.band} &bull; Score ${ticket.score}</span>
+                </div>
+                <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 0.5rem; line-height: 1.3;">${ticket.title}</h3>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">📍 ${ticket.facility} &bull; ${ticket.room}</div>
+
+                <div style="background: #f8fafc; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.1rem; margin-bottom: 1.25rem; font-size: 0.85rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
+                    <div><span style="color: var(--text-muted);">Status:</span> <strong style="color: var(--text-primary);">${ticket.statusLabel}</strong></div>
+                    <div><span style="color: var(--text-muted);">Category:</span> <strong style="color: var(--text-primary);">${ticket.category}</strong></div>
+                    <div><span style="color: var(--text-muted);">Requester:</span> <strong style="color: var(--text-primary);">${ticket.requester}</strong></div>
+                    <div><span style="color: var(--text-muted);">Technician:</span> <strong style="color: var(--text-primary);">${ticket.technician || 'Unassigned'}</strong></div>
+                    <div><span style="color: var(--text-muted);">SLA Window:</span> <strong style="color: var(--text-primary);">${ticket.slaHours} Hours</strong></div>
+                    <div><span style="color: var(--text-muted);">On-Site Code:</span> <code style="color: #0284c7; font-weight: 800; font-family: var(--font-mono); background: #e0f2fe; padding: 0.15rem 0.45rem; border-radius: 4px;">${ticket.code}</code></div>
+                </div>
+
+                <div style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                    <strong>Work Notes:</strong> ${ticket.notes || 'No work notes recorded yet.'}
+                </div>
+
+                ${actionButtons}
+            `;
+
+            modal.classList.add('open');
+        }
+
+        function transitionTicket(ticketId, newStatus, newColor, newLabel) {
+            const ticket = tickets.find(t => t.id === ticketId);
+            if (!ticket) return;
+
+            ticket.status = newStatus;
+            ticket.statusColor = newColor;
+            ticket.statusLabel = newLabel;
+            if (newStatus === 'IN_PROGRESS' && !ticket.technician) {
+                ticket.technician = 'Tom Technician';
+            }
+
+            if (newStatus === 'VERIFIED_FIXED') {
+                playSfx('fanfare');
+                triggerConfetti();
+            } else {
+                playSfx('success');
+            }
+
+            renderBoard();
+            closeModal();
+            showToast('State Transition', `${ticket.id} transitioned to ${newLabel}`);
+        }
+
+        function closeModal(e) {
+            const modal = document.getElementById('ticketModal');
+            if (modal) modal.classList.remove('open');
+        }
+
+        // ==========================================================================
+        // Toast Helper
+        // ==========================================================================
+        function showToast(title, msg) {
+            const toast = document.getElementById('toastNotice');
+            if (!toast) return;
+            const tTitle = document.getElementById('toastTitle');
+            const tMsg = document.getElementById('toastMsg');
+            if (tTitle) tTitle.textContent = title;
+            if (tMsg) tMsg.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3800);
+        }
+
+        // ==========================================================================
+        // Canvas Confetti
+        // ==========================================================================
+        let confettiParticles = [];
+        let confettiAnimationId = null;
+
+        function triggerConfetti() {
+            const canvas = document.getElementById('confettiCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const colors = ['#059669', '#2563eb', '#d97706', '#ec4899', '#8b5cf6', '#10b981'];
+            confettiParticles = [];
+
+            for (let i = 0; i < 140; i++) {
+                confettiParticles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 16,
+                    vy: (Math.random() - 0.8) * 18,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * 360,
+                    rotationSpeed: (Math.random() - 0.5) * 10,
+                    opacity: 1
+                });
+            }
+
+            if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId);
+            animateConfetti(ctx, canvas);
+        }
+
+        function animateConfetti(ctx, canvas) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let activeCount = 0;
+
+            confettiParticles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.35;
+                p.vx *= 0.98;
+                p.rotation += p.rotationSpeed;
+                p.opacity -= 0.009;
+
+                if (p.opacity > 0) {
+                    activeCount++;
+                    ctx.save();
+                    ctx.globalAlpha = p.opacity;
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate((p.rotation * Math.PI) / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.7);
+                    ctx.restore();
+                }
+            });
+
+            if (activeCount > 0) {
+                confettiAnimationId = requestAnimationFrame(() => animateConfetti(ctx, canvas));
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        // ==========================================================================
+        // Window Resize & Keyboard Shortcuts
+        // ==========================================================================
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('confettiCanvas');
+            if (canvas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+            if (e.key === '/' && document.activeElement && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                switchTab('board');
+                const search = document.getElementById('boardSearchInput');
+                if (search) search.focus();
+            }
+        });
+
+        // Bulletproof Initialization
+        function initApp() {
+            renderBoard();
+            updateScorePreview();
+            renderWorkers();
+            populateVerifyDropdown();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+    </script>
+</body>
+</html>
