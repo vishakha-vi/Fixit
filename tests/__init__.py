@@ -1,0 +1,1 @@
+"""FixIt automated test suite."""
