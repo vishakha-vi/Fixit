@@ -39,5 +39,5 @@ Legend:
 | - [ ] | S31 | Empty or degenerate reports | M | | Pending |
 | - [ ] | S32 | 1000+ requests performance | M | | Pending |
 | - [ ] | S33 | SMTP failure non-blocking | M | | Pending |
-| - [ ] | S34 | Friendly 500 with reference ID | M | | Pending |
-| - [ ] | S35 | reset_demo | M | | Pending |
+| - [x] | S34 | Friendly 500 with reference ID | M | tests/test_pages.py | Complete |
+| - [x] | S35 | reset_demo | M | tests/test_reset_demo.py | Complete |
